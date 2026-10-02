@@ -1,4 +1,10 @@
-# BazaarX
+<p align="center">
+  <img src="apps/web/public/assets/branding/bazaarx-logo.svg" alt="BazaarX — Shop smarter. Live better." width="420" />
+</p>
+
+<p align="center"><strong>Shop smarter. Live better.</strong><br />A multi-vendor marketplace for shoppers, independent sellers, and marketplace teams.</p>
+
+<br />
 
 BazaarX is a multi-vendor commerce platform for shoppers, independent sellers, and marketplace administrators. The first delivery is a responsive web MVP: buyers can discover products, save favorites, manage a cart, place a mock order, and view order history; sellers can review sales, manage listings and inventory, and fulfil orders; administrators can review marketplace activity, sellers, products, orders, and payments.
 
