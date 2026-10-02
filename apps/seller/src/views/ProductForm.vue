@@ -3,6 +3,7 @@ import { computed, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { sellerData } from "../data";
 import { ArrowLeft, Save, Check } from "lucide-vue-next";
+import { marketplaceApi, type ListingCopy } from "../services/marketplace";
 const route = useRoute();
 const router = useRouter();
 const existing = computed(() =>
@@ -13,7 +14,23 @@ const category = ref(existing.value?.category ?? "Electronics");
 const sku = ref(existing.value?.sku ?? "");
 const price = ref(existing.value?.price ?? 0);
 const stock = ref(existing.value?.stock ?? 0);
+const shortDescription = ref(existing.value?.shortDescription ?? "");
+const description = ref(existing.value?.description ?? "");
+const specifications = ref(existing.value?.specifications ?? "");
 const error = ref("");
+const aiLoading = ref(false);
+const aiCopy = ref<ListingCopy | null>(null);
+const quality = ref<{score:number;suggestions:string[]}|null>(null);
+async function generateCopy() {
+  error.value = ""; aiLoading.value = true;
+  try {
+    if (marketplaceApi.enabled) aiCopy.value = await marketplaceApi.generateListing({title:title.value,category:category.value,specifications:specifications.value});
+    else aiCopy.value = {provider:"local-demo",seoTitle:`${title.value} | BazaarX ${category.value}`,shortDescription:`${title.value} for everyday use. Shop confidently on BazaarX.`,description:`${title.value} is a quality choice in ${category.value}. ${specifications.value.trim() || "Add verified product specifications to help shoppers make an informed choice."} Enjoy convenient delivery and buyer support through BazaarX.`,bullets:["Clear product details","Convenient delivery","BazaarX buyer support"],keywords:[title.value,category.value]};
+  } catch(cause) { error.value = cause instanceof Error ? cause.message : "Listing copy could not be generated."; }
+  finally { aiLoading.value = false; }
+}
+function applyCopy() { if (!aiCopy.value) return; title.value = aiCopy.value.seoTitle; shortDescription.value = aiCopy.value.shortDescription; description.value = aiCopy.value.description; }
+async function checkQuality() { try { quality.value = marketplaceApi.enabled ? await marketplaceApi.listingQuality({title:title.value,category:category.value,description:description.value,images:[],specifications:specifications.value}) : {score:[title.value.length>=15,Boolean(category.value),description.value.length>=60,specifications.value.length>=10].filter(Boolean).length*25,suggestions:[...(title.value.length<15?["Use a more specific title."]:[]),...(description.value.length<60?["Write a more helpful product description."]:[]),...(specifications.value.length<10?["Add product specifications."]:[]),"Add at least three product images." ]}; } catch(cause) { error.value = cause instanceof Error ? cause.message : "Listing quality could not be checked."; } }
 function submit() {
   if (
     !title.value.trim() ||
@@ -31,6 +48,9 @@ function submit() {
       sku: sku.value.trim(),
       price: price.value,
       stock: stock.value,
+      shortDescription: shortDescription.value,
+      description: description.value,
+      specifications: specifications.value,
     });
   } else
     sellerData.products.unshift({
@@ -40,6 +60,9 @@ function submit() {
       sku: sku.value.trim(),
       price: price.value,
       stock: stock.value,
+      shortDescription: shortDescription.value,
+      description: description.value,
+      specifications: specifications.value,
       status: "Under review",
     });
   router.push("/products");
@@ -95,12 +118,16 @@ function submit() {
       <label class="form-field"
         ><span>Short description</span
         ><textarea
+          v-model="shortDescription"
           class="seller-input"
           rows="4"
           maxlength="500"
           placeholder="What makes this product useful?"
         />
       </label>
+      <label class="form-field"><span>Full description</span><textarea v-model="description" class="seller-input" rows="5" placeholder="Add complete product details" /></label>
+      <label class="form-field"><span>Specifications</span><textarea v-model="specifications" class="seller-input" rows="3" placeholder="Battery: 5000 mAh, Storage: 256 GB" /></label>
+      <section class="listing-ai"><div><b>Listing assistant</b><small>Generate a draft from product details. Review it before using.</small></div><div class="listing-ai-actions"><button type="button" class="secondary-button" :disabled="aiLoading || !title.trim()" @click="generateCopy">{{ aiLoading ? "Generating…" : "Generate listing draft" }}</button><button type="button" class="secondary-button" @click="checkQuality">Check listing quality</button></div><article v-if="aiCopy"><b>{{ aiCopy.seoTitle }}</b><p>{{ aiCopy.shortDescription }}</p><button type="button" class="primary-button" @click="applyCopy">Use this draft</button></article><article v-if="quality"><b>Listing quality: {{ quality.score }} / 100</b><small v-for="suggestion in quality.suggestions" :key="suggestion">{{ suggestion }}</small></article></section>
       <div class="two-fields">
         <label class="form-field"
           ><span>Price (PKR) <i>*</i></span

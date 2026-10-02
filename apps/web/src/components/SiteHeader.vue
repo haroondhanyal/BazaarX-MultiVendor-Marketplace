@@ -9,6 +9,7 @@ import {
   Menu,
   X,
   Store,
+  Sparkles,
 } from "lucide-vue-next";
 import { useShopStore } from "../stores/shop";
 const shop = useShopStore();
@@ -85,6 +86,7 @@ function search() {
         ><RouterLink to="/search?sort=newest">New Arrivals</RouterLink
         ><RouterLink to="/search?q=brands">Top Brands</RouterLink
         ><RouterLink to="/search?q=local+stores">BazaarX Local</RouterLink
+        ><RouterLink to="/assistant"><Sparkles :size="14" /> Smart shopping</RouterLink
         ><span class="nav-promise"
           ><Store :size="14" /> Trusted local stores</span
         >

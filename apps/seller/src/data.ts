@@ -8,6 +8,9 @@ export interface SellerProduct {
   price: number;
   stock: number;
   status: "Active" | "Draft" | "Under review";
+  shortDescription?: string;
+  description?: string;
+  specifications?: string;
 }
 export interface SellerOrder {
   id: string;

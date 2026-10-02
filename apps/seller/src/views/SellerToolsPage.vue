@@ -23,6 +23,7 @@ const stats = ref<string[]>([]);
 const search = ref("");
 const feedback = ref("");
 const reply = ref("");
+const selectedConversation = ref("");
 const campaignName = ref("");
 const campaignDescription = ref("");
 const filtered = computed(() => rows.value.filter((item) => `${item.name} ${item.detail} ${item.status}`.toLowerCase().includes(search.value.toLowerCase())));
@@ -51,6 +52,11 @@ async function load() {
       const sellerReturns = result.data.filter((entry) => entry.seller.toLowerCase() === "techstore official");
       rows.value = sellerReturns.map((entry) => ({ name: entry.id, detail: `${entry.itemName} · ${entry.reason}`, status: entry.status, value: money(entry.refundAmount) }));
       stats.value = [`${sellerReturns.filter((entry) => !["REFUNDED", "REJECTED"].includes(entry.status)).length} active requests`, money(sellerReturns.reduce((sum, entry) => sum + entry.refundAmount, 0)), "Track every review step"];
+    } else if (section.value === "messages") {
+      const result = await marketplaceApi.conversations();
+      rows.value = result.data.map((entry) => ({ name: entry.buyer, detail: entry.lastMessage, status: entry.online ? "Online" : "Offline", value: entry.updatedAt }));
+      selectedConversation.value = result.data[0]?.id ?? "";
+      stats.value = [`${result.data.length} conversations`, `${result.data.filter((entry) => entry.messages.some((message) => !message.read && message.sender === "buyer")).length} unread`, "Updates every 5 seconds"];
     } else if (section.value === "promotions") {
       const result = await marketplaceApi.campaigns();
       const campaigns = result.data.filter((entry) => entry.sellerNames.includes("TechStore Official"));
@@ -72,8 +78,11 @@ async function act(row: Row) {
 }
 async function primaryAction() {
   if (section.value === "messages" && reply.value.trim()) {
-    rows.value[0].detail = reply.value.trim(); reply.value = "";
-    feedback.value = "Your reply has been saved.";
+    try {
+      if (marketplaceApi.enabled && selectedConversation.value) await marketplaceApi.sendMessage(selectedConversation.value, reply.value.trim());
+      rows.value[0].detail = reply.value.trim(); reply.value = "";
+      feedback.value = "Your reply has been sent."; await load();
+    } catch (cause) { feedback.value = cause instanceof Error ? cause.message : "Your reply could not be sent."; }
   } else if (section.value === "promotions" && marketplaceApi.enabled) {
     if (!campaignName.value.trim()) { feedback.value = "Enter a campaign name first."; return; }
     try {

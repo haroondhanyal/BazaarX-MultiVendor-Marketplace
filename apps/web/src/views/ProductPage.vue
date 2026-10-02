@@ -23,6 +23,7 @@ import SiteFooter from "../components/SiteFooter.vue";
 import ProductCard from "../components/ProductCard.vue";
 import ImageWithFallback from "../components/ImageWithFallback.vue";
 import StatusView from "../components/StatusView.vue";
+import { intelligenceApi } from "../services/intelligence";
 const route = useRoute();
 const router = useRouter();
 const shop = useShopStore();
@@ -33,6 +34,8 @@ const quantity = ref(1);
 const selectedColor = ref("");
 const tab = ref("description");
 const added = ref(false);
+const aiReview = ref<{summary:string;positives:string[];complaints:string[];sentiment:string} | null>(null);
+const aiRecommendations = ref<Product[]>([]);
 const similar = computed(() =>
   products
     .filter(
@@ -42,11 +45,19 @@ const similar = computed(() =>
     )
     .slice(0, 4),
 );
+const recommended = computed(() => aiRecommendations.value.length ? aiRecommendations.value : similar.value);
 async function loadProduct() {
   loading.value = true;
   loadError.value = false;
   try {
-    product.value = await catalogApi.getProduct(String(route.params.slug));
+    const loadedProduct = await catalogApi.getProduct(String(route.params.slug));
+    if (!loadedProduct) throw new Error("Product not found");
+    product.value = loadedProduct;
+    if (intelligenceApi.enabled) {
+      const [review, recommendations] = await Promise.all([intelligenceApi.reviewSummary(loadedProduct.id), intelligenceApi.recommendations(loadedProduct.id)]);
+      aiReview.value = review;
+      aiRecommendations.value = recommendations.data;
+    }
   } catch {
     loadError.value = true;
   } finally {
@@ -301,10 +312,8 @@ function addCart(goToCart = false) {
           >
           <div>
             <h2>Shopper reviews</h2>
-            <p>
-              {{ product.reviews.toLocaleString() }} ratings from verified
-              buyers.
-            </p>
+            <p>{{ aiReview?.summary ?? `${product.reviews.toLocaleString()} shopper ratings. Review summary is available when the smart API is connected.` }}</p>
+            <div v-if="aiReview" class="ai-review-points"><b>Common positives</b><span v-for="item in aiReview.positives" :key="item">{{ item }}</span><b>To consider</b><span v-for="item in aiReview.complaints" :key="item">{{ item }}</span><small>Sentiment: {{ aiReview.sentiment }} · Demo review summary</small></div>
             <span class="verified-review"
               ><ShieldCheck :size="16" /> Reviews are linked to BazaarX
               orders.</span
@@ -312,7 +321,7 @@ function addCart(goToCart = false) {
           </div>
         </div>
       </section>
-      <section v-if="similar.length" class="section-block related-products">
+      <section v-if="recommended.length" class="section-block related-products">
         <div class="section-heading">
           <div>
             <span class="eyebrow">MORE TO EXPLORE</span>
@@ -320,7 +329,7 @@ function addCart(goToCart = false) {
           </div>
         </div>
         <div class="product-grid">
-          <ProductCard v-for="item in similar" :key="item.id" :product="item" />
+          <ProductCard v-for="item in recommended" :key="item.id" :product="item" />
         </div>
       </section>
     </main>

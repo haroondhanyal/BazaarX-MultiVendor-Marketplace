@@ -29,6 +29,10 @@ export const marketplaceApi = {
   runSettlement(seller: string) { return request<{ data: Settlement[]; message: string }>("/finance/settlements/run", { method: "POST", body: JSON.stringify({ sellerId: seller }) }); },
   campaigns() { return request<{ data: Campaign[] }>("/promotions/campaigns"); },
   createCampaign(input: Pick<Campaign, "name" | "description" | "startsAt" | "endsAt">) { return request<Campaign>("/promotions/campaigns", { method: "POST", body: JSON.stringify(input) }); },
+  conversations() { return request<{data:SellerConversation[]}>('/conversations?participant=TechStore%20Official'); },
+  sendMessage(id: string, text: string) { return request<SellerMessage>(`/conversations/${encodeURIComponent(id)}/messages`, {method:'POST',body:JSON.stringify({text,sender:'seller'})}); },
+  generateListing(input: {title:string;category:string;specifications?:string}) { return request<ListingCopy>('/ai/listing/generate',{method:'POST',body:JSON.stringify(input)}); },
+  listingQuality(input: {title:string;category:string;description?:string;images?:string[];specifications?:string}) { return request<{score:number;suggestions:string[]}>('/ai/listing/quality',{method:'POST',body:JSON.stringify(input)}); },
 };
 
 export interface Shipment { id: string; orderId: string; trackingNumber: string; courier: string; status: string; estimatedDelivery: string; events: Array<{ status: string; location: string; time: string; notes: string }> }
@@ -37,3 +41,6 @@ export interface FinanceSummary { gross: number; commission: number; paymentFees
 export interface Settlement { id: string; sellerId: string; periodStart: string; periodEnd: string; status: string; amount: number; orderIds: string[] }
 export interface SellerAnalytics { revenue: number; orders: number; averageOrderValue: number; returnRate: number; cancellationRate: number; topProducts: Array<{name:string;revenue:number;units:number;category:string}> }
 export interface Campaign { id: string; name: string; description: string; status: string; startsAt: string; endsAt: string; sellerNames: string[] }
+export interface SellerMessage { id:string;sender:string;text:string;sentAt:string;read:boolean }
+export interface SellerConversation { id:string;buyer:string;seller:string;lastMessage:string;updatedAt:string;online:boolean;typing:string|null;messages:SellerMessage[] }
+export interface ListingCopy { provider:string;seoTitle:string;shortDescription:string;description:string;bullets:string[];keywords:string[] }

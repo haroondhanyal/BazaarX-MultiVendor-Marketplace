@@ -29,6 +29,28 @@ The experience follows the approved BazaarX direction: white surfaces, orange ac
 - **Phase 6 — delivery and after-sales:** shipment creation, courier scans, buyer tracking timeline, return request evidence, seller/admin review steps, and refund records.
 - **Phase 7 — marketplace offers:** server-validated voucher rules, flash-sale stock and prices, campaign submissions, and admin activation controls.
 - **Phase 8 — seller finance and analytics:** category commission rules, seller net proceeds, weekly settlement batches, seller performance reports, and marketplace totals.
+- **Phase 9 — marketplace communication:** buyer–seller conversations, text and URL attachments, product/order references, read and typing states, in-app notifications, customer support tickets, admin replies, and ticket status updates.
+- **Phase 10 — assisted discovery and listings:** natural-language product search, budget-aware shopping assistant, related product suggestions, product review summaries, seller listing copy drafts, and listing quality checks.
+
+## Architecture
+
+This npm-workspaces monorepo keeps portal screens separate so six developers can work across buyer, seller, admin, API, shared types, and platform setup:
+
+```text
+apps/
+  web/       Vue 3 + TypeScript buyer storefront
+  seller/    Vue 3 + TypeScript seller center
+  admin/     Vue 3 + TypeScript operations portal
+  api/       NestJS REST API and Prisma schema/migrations
+packages/    shared TypeScript types and validation
+docs/        local setup and team development notes
+```
+
+Each portal has its own views, router, services, and shell. API modules group endpoints by marketplace domain. Small frontend service modules own HTTP calls, and views call those services. Prisma models and SQL migrations document the persistent data shape.
+
+Phase 9 chat refreshes over REST polling every five seconds. Presence and typing are demo states; image attachments are image URLs. No real-time socket server or binary upload/storage provider is configured. Notifications currently appear in-app; email, SMS, and push delivery providers are not connected.
+
+Phase 10 uses a deterministic local mock AI provider behind a provider interface. It searches seeded catalog products and returns generated demo review summaries without calling an external model. Replace the provider and review source before relying on generated copy or sentiment for live listings.
 
 ## Run locally
 
@@ -42,9 +64,11 @@ npm run dev:admin    # admin portal at http://localhost:5175
 npm run dev:api      # API at http://localhost:3001/api/v1
 ```
 
-Copy `.env.example` to `.env` at the repository root to connect all three portals to the API. The Phase 6–8 API is a process-memory mock for this delivery: orders, shipments, returns, vouchers, campaigns, flash sales, and settlement records reset when the API restarts. The Prisma schema and migration describe the database shape, but these mock endpoints do not persist to PostgreSQL yet.
+Copy `.env.example` to `.env` at the repository root to connect all three portals to the API. The API remains a process-memory mock: orders, shipments, returns, vouchers, campaigns, flash sales, settlements, chat, support tickets, and notifications reset when the API restarts. Prisma migrations describe the database shape, but these endpoints do not persist to PostgreSQL yet.
 
-The buyer app uses browser local storage for its demo flow by default. With the root `.env` configured, checkout and fulfilment-related buyer, seller, and admin screens use the shared mock API. API catalog records and browser demo products are seeded separately. Seller/admin functions outside the Phase 6–8 endpoints and buyer support interactions retain browser-local demo storage. Real payment, shipping, identity providers, and database-backed repositories are future work.
+The buyer app uses browser local storage for its demo flow by default. With the root `.env` configured, implemented buyer, seller, and admin flows use the shared mock API. API catalog records and browser demo products are seeded separately. Login is a front-end demo; API routes do not enforce authentication or role authorization. Real payment, shipping, notification delivery, identity providers, uploads, and database-backed repositories are future work.
+
+Before sharing a build, run `npm run type-check` and `npm run build` from the repository root. Open `http://localhost:3001/api/docs` while the API is running to inspect the API documentation.
 
 Demo checkout voucher: `BAZAARX10` (10% off, PKR 10,000 minimum subtotal, up to PKR 5,000 discount).
 

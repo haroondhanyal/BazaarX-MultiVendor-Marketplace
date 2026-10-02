@@ -22,6 +22,10 @@ export const adminApi = {
   createFlashSale(input: object) { return request<AdminFlashSale>("/promotions/flash-sales", { method: "POST", body: JSON.stringify(input) }); },
   updateFlashSale(id: string, status: string) { return request<AdminFlashSale>(`/promotions/flash-sales/${encodeURIComponent(id)}/status`, { method: "PATCH", body: JSON.stringify({ status }) }); },
   analytics() { return request<MarketplaceAnalytics>("/analytics/marketplace"); },
+  tickets() { return request<{data:AdminTicket[]}>('/support/tickets'); },
+  createTicket(input: {userId:string;category:string;subject:string;message:string}) { return request<AdminTicket>('/support/tickets',{method:'POST',body:JSON.stringify(input)}); },
+  updateTicket(id: string, status: string) { return request<AdminTicket>(`/support/tickets/${encodeURIComponent(id)}/status`, {method:'PATCH',body:JSON.stringify({status})}); },
+  commentTicket(id: string, message: string) { return request<AdminTicket>(`/support/tickets/${encodeURIComponent(id)}/comments`, {method:'POST',body:JSON.stringify({author:'BazaarX support',message})}); },
 };
 export interface AdminShipment { id:string; orderId:string; trackingNumber:string; courier:string; status:string; currentLocation:string; estimatedDelivery:string; events:Array<{status:string;location:string;time:string}> }
 export interface AdminReturn { id:string; orderId:string; productId:string; itemName:string; seller:string; reason:string; refundAmount:number; status:string; createdAt:string }
@@ -29,3 +33,4 @@ export interface AdminCampaign { id:string; name:string; description:string; sta
 export interface AdminVoucher { code:string; title:string; type:string; status:string; percentOff?:number; amountOff?:number; minimumSpend:number; used:number; usageLimit:number; endsAt:string }
 export interface AdminFlashSale { id:string; name:string; status:string; startsAt:string; endsAt:string; items:Array<{productId:string;flashPrice:number;allocatedStock:number;sold:number;product?:{name:string}}> }
 export interface MarketplaceAnalytics { gmv:number;netRevenue:number;orders:number;customers:number;activeSellers:number;averageOrderValue:number;returns:number;refunds:number;commissionRevenue:number }
+export interface AdminTicket { id:string;userId:string;category:string;subject:string;message:string;status:string;createdAt:string;comments:Array<{id:string;author:string;message:string;createdAt:string}> }

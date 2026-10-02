@@ -23,6 +23,7 @@ import {
 } from "@nestjs/common";
 import { catalog } from "../catalog/catalog.controller";
 import { activeFlashPrice, calculateVoucher, vouchers } from "../promotions/promotion-data";
+import { pushNotification } from "../communication/communication.controller";
 
 class CheckoutItemDto {
   @IsString() productId!: string;
@@ -138,6 +139,7 @@ export class OrdersController {
     }
     orders.set(order.id, order);
     if (key) checkoutKeys.set(key, order);
+    pushNotification("customer", "order", "Order placed", `Order ${order.id} was placed successfully.`, `/account/orders/${order.id}`);
     return order;
   }
 

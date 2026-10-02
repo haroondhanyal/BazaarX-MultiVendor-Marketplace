@@ -14,6 +14,7 @@ import SiteFooter from "../components/SiteFooter.vue";
 import SiteHeader from "../components/SiteHeader.vue";
 import StatusView from "../components/StatusView.vue";
 import { catalogApi } from "../services/catalog";
+import { intelligenceApi } from "../services/intelligence";
 
 const route = useRoute();
 const query = ref(String(route.query.q ?? ""));
@@ -36,6 +37,7 @@ async function loadCatalog() {
   apiError.value = false;
   try {
     catalog.value = await catalogApi.listProducts();
+    if (query.value.trim() && intelligenceApi.enabled) catalog.value = (await intelligenceApi.search(query.value)).data;
   } catch {
     apiError.value = true;
   } finally {
@@ -46,7 +48,14 @@ onMounted(loadCatalog);
 
 watch(
   () => route.query.q,
-  (value) => (query.value = String(value ?? "")),
+  async (value) => {
+    query.value = String(value ?? "");
+    if (!query.value.trim() || !intelligenceApi.enabled) return;
+    loading.value = true;
+    try { catalog.value = (await intelligenceApi.search(query.value)).data; apiError.value = false; }
+    catch { apiError.value = true; }
+    finally { loading.value = false; }
+  },
 );
 watch(
   () => route.params.slug,

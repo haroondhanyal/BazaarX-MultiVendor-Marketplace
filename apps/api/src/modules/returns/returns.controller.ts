@@ -1,6 +1,7 @@
 import { IsArray, IsIn, IsOptional, IsString, MinLength } from "class-validator";
 import { BadRequestException, Body, Controller, Get, NotFoundException, Param, Patch, Post } from "@nestjs/common";
 import { findMockOrder } from "../orders/orders.controller";
+import { pushNotification } from "../communication/communication.controller";
 
 const returns = new Map<string, ReturnRecord>();
 const refunds = new Map<string, RefundRecord>();
@@ -37,6 +38,7 @@ export class ReturnsController {
       events: [{ status: "REQUESTED", time: now, note: "Return request received." }], evidence: body.evidence ?? [],
     };
     returns.set(request.id, request);
+    pushNotification("customer", "return", "Return request received", `Return ${request.id} was submitted.`, "/returns");
     return request;
   }
   @Patch(":returnId/status")
@@ -54,6 +56,7 @@ export class ReturnsController {
       const refund: RefundRecord = { id: `RF-${Date.now()}`, returnId, orderId: request.orderId, amount: request.refundAmount, method: request.refundMethod, status: "COMPLETED", createdAt: time };
       refunds.set(refund.id, refund);
     }
+    pushNotification("customer", body.status === "REFUNDED" ? "refund" : "return", body.status === "REFUNDED" ? "Refund complete" : "Return update", `${request.id} is now ${body.status.toLowerCase().replaceAll("_", " ")}.`, "/returns");
     return request;
   }
   @Get(":returnId") get(@Param("returnId") returnId: string) { const request = returns.get(returnId); if (!request) throw new NotFoundException("Return request not found"); return request; }

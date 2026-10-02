@@ -8,20 +8,26 @@ datasource db {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  phone        String?   @unique
-  passwordHash String
-  firstName    String
-  lastName     String
-  status       String    @default("ACTIVE")
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  addresses    Address[]
-  seller       Seller?
-  cart         Cart?
-  wishlist     Wishlist?
-  orders       Order[]
+  id             String          @id @default(cuid())
+  email          String          @unique
+  phone          String?         @unique
+  passwordHash   String
+  firstName      String
+  lastName       String
+  status         String          @default("ACTIVE")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  addresses      Address[]
+  seller         Seller?
+  cart           Cart?
+  wishlist       Wishlist?
+  orders         Order[]
+  conversations  Conversation[]
+  sentMessages   Message[]
+  notifications  Notification[]
+  supportTickets SupportTicket[]
+  searchEvents   SearchEvent[]
+  productViews   ProductView[]
 }
 
 model Address {
@@ -112,6 +118,7 @@ model Product {
   cartItems     CartItem[]
   wishlistItems WishlistItem[]
   orderItems    OrderItem[]
+  views         ProductView[]
 
   @@index([categoryId, status])
   @@index([sellerId, status])
@@ -538,4 +545,120 @@ model MarketplaceFee {
   createdAt DateTime @default(now())
 
   @@index([sellerId, createdAt])
+}
+
+model Conversation {
+  id        String    @id @default(cuid())
+  buyerId   String
+  sellerId  String
+  status    String    @default("OPEN")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  buyer     User      @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  messages  Message[]
+
+  @@index([buyerId, updatedAt])
+  @@index([sellerId, updatedAt])
+}
+
+model Message {
+  id             String              @id @default(cuid())
+  conversationId String
+  senderId       String?
+  senderRole     String
+  text           String              @default("")
+  productId      String?
+  orderId        String?
+  createdAt      DateTime            @default(now())
+  conversation   Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User?               @relation(fields: [senderId], references: [id], onDelete: SetNull)
+  attachments    MessageAttachment[]
+  receipts       MessageReceipt[]
+
+  @@index([conversationId, createdAt])
+}
+
+model MessageAttachment {
+  id        String   @id @default(cuid())
+  messageId String
+  fileUrl   String
+  mediaType String
+  createdAt DateTime @default(now())
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+}
+
+model MessageReceipt {
+  id        String    @id @default(cuid())
+  messageId String
+  userId    String
+  readAt    DateTime?
+  message   Message   @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+  @@index([userId, readAt])
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  message   String
+  link      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
+}
+
+model SupportTicket {
+  id        String           @id @default(cuid())
+  userId    String
+  category  String
+  subject   String
+  message   String
+  status    String           @default("OPEN")
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments  SupportComment[]
+
+  @@index([status, createdAt])
+  @@index([userId, createdAt])
+}
+
+model SupportComment {
+  id        String        @id @default(cuid())
+  ticketId  String
+  author    String
+  message   String
+  createdAt DateTime      @default(now())
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId, createdAt])
+}
+
+model SearchEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  query     String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model ProductView {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([productId, createdAt])
 }

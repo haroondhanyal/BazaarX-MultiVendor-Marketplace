@@ -1,6 +1,7 @@
 import { IsIn, IsOptional, IsString, MinLength } from "class-validator";
 import { BadRequestException, Body, Controller, Get, Headers, NotFoundException, Param, Patch, Post } from "@nestjs/common";
 import { findMockOrder } from "../orders/orders.controller";
+import { pushNotification } from "../communication/communication.controller";
 
 const shipmentMap = new Map<string, ShipmentRecord>();
 const shipmentKeys = new Map<string, ShipmentRecord>();
@@ -71,6 +72,7 @@ export class ShipmentsController {
     shipment.status = body.status;
     const order = findMockOrder(shipment.orderId);
     if (order) order.status = body.status === "DELIVERED" ? "DELIVERED" : body.status === "OUT_FOR_DELIVERY" || body.status === "PICKED_UP" ? "SHIPPED" : "PACKED";
+    if (body.status === "OUT_FOR_DELIVERY" || body.status === "DELIVERED") pushNotification("customer", body.status === "DELIVERED" ? "delivery" : "shipment", body.status === "DELIVERED" ? "Order delivered" : "Out for delivery", `Shipment ${shipment.trackingNumber} is ${body.status.toLowerCase().replaceAll("_", " ")}.`, `/orders/${shipment.orderId}/tracking`);
     return shipment;
   }
 }
