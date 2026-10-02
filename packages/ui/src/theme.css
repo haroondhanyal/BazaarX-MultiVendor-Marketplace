@@ -216,6 +216,30 @@ html[data-theme="dark"] .support-intro label {
   background: #171d25;
   border-color: #455160;
 }
+html[data-theme="dark"] .assistant-intro {
+  color: #e2e8f0;
+  background: #222a34;
+  background-image: none;
+  border-color: #455160;
+}
+html[data-theme="dark"] .assistant-intro form {
+  color: #c2ccda;
+  background: #171d25;
+  border-color: #455160;
+}
+html[data-theme="dark"] .assistant-intro form > svg { color: #a7b2c1; }
+html[data-theme="dark"] .assistant-intro form button:disabled {
+  color: #fff;
+  background: #913b1e;
+  opacity: 1;
+}
+html[data-theme="dark"] .assistant-empty {
+  color: #c2ccda;
+  background: #222a34;
+  border-color: #455160;
+}
+html[data-theme="dark"] .assistant-empty b { color: #e2e8f0; }
+html[data-theme="dark"] .assistant-error { color: #ff9c8f; }
 html[data-theme="dark"] .cart-seller-heading {
   color: #e2e8f0;
   background: #1b222b;
