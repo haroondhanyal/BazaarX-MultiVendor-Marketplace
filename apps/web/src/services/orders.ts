@@ -3,7 +3,7 @@ import type { MarketplaceOrder } from "@bazaarx/types";
 const apiBase = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "");
 
 export interface CheckoutInput {
-  items: Array<{ productId: string; quantity: number; flashSaleId?: string }>;
+  items: Array<{ productId: string; quantity: number; flashSaleId?: string; color?: string; dealId?: string }>;
   address: string;
   paymentMethod: string;
   deliveryMethod: string;

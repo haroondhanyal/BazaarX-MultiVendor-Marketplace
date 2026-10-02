@@ -91,10 +91,10 @@ function toggleTheme() {
       <div class="container category-nav-inner">
         <RouterLink to="/search" class="all-categories"
           ><Menu :size="16" /> All Categories</RouterLink
-        ><RouterLink to="/search?q=deals">Today's Deals</RouterLink
-        ><RouterLink to="/search?q=flash+sale">Flash Sale</RouterLink
-        ><RouterLink to="/search?sort=newest">New Arrivals</RouterLink
-        ><RouterLink to="/search?q=brands">Top Brands</RouterLink
+        ><RouterLink to="/deals">Today's Deals</RouterLink
+        ><RouterLink to="/flash-sales">Flash Sale</RouterLink
+        ><RouterLink to="/new-arrivals">New Arrivals</RouterLink
+        ><RouterLink to="/brands">Top Brands</RouterLink
         ><RouterLink to="/search?q=local+stores">BazaarX Local</RouterLink
         ><RouterLink to="/assistant"><Sparkles :size="14" /> Smart shopping</RouterLink
         ><span class="nav-promise"

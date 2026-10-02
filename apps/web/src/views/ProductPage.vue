@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   Star,
   Check,
+  ChevronLeft,
   Minus,
   Plus,
   ChevronRight,
@@ -25,14 +26,24 @@ import ImageWithFallback from "../components/ImageWithFallback.vue";
 import StatusView from "../components/StatusView.vue";
 import { intelligenceApi } from "../services/intelligence";
 import { getDemoReviews } from "../data/demoReviews";
+import { getProductColorFilter, getProductColorHex } from "../utils/product-image";
 const route = useRoute();
 const router = useRouter();
 const shop = useShopStore();
 const product = ref<Product | undefined>();
+const selectedImageIndex = ref(0);
+const selectedColor = ref("");
+const activeColor = computed(() => selectedColor.value || product.value?.colors?.[0] || "");
+const productImages = computed(() => {
+  if (!product.value) return [];
+  const colorSet = Object.entries(product.value.colorImages ?? {}).find(([color]) => color.toLowerCase() === activeColor.value.toLowerCase())?.[1];
+  return [...new Set([...(colorSet ?? product.value.images ?? []), product.value.image].filter(Boolean))];
+});
+const currentProductImage = computed(() => productImages.value[selectedImageIndex.value] ?? product.value?.image ?? "");
 const loading = ref(true);
 const loadError = ref(false);
 const quantity = ref(1);
-const selectedColor = ref("");
+const activeImageFilter = computed(() => getProductColorFilter(activeColor.value));
 const tab = ref("description");
 const added = ref(false);
 const aiReview = ref<{summary:string;positives:string[];complaints:string[];sentiment:string} | null>(null);
@@ -40,6 +51,7 @@ const aiRecommendations = ref<Product[]>([]);
 const visibleCount = ref(4);
 const visibleReviews = ref(3);
 const demoReviews = computed(() => product.value ? getDemoReviews(product.value) : []);
+watch(selectedColor, () => { selectedImageIndex.value = 0; });
 const similar = computed(() =>
   products
     .filter(
@@ -47,6 +59,7 @@ const similar = computed(() =>
         item.id !== product.value?.id &&
         item.category === product.value?.category,
     )
+    .sort((a, b) => (b.soldLast24h ?? 0) - (a.soldLast24h ?? 0) || b.rating - a.rating)
 );
 const recommended = computed(() => aiRecommendations.value.length ? aiRecommendations.value : similar.value);
 const visibleRecommended = computed(() => recommended.value.slice(0, visibleCount.value));
@@ -59,6 +72,11 @@ async function loadProduct() {
     const loadedProduct = await catalogApi.getProduct(String(route.params.slug));
     if (!loadedProduct) throw new Error("Product not found");
     product.value = loadedProduct;
+    selectedImageIndex.value = 0;
+    const namedColor = loadedProduct.name.match(/graphite|midnight|black|silver|white|pearl|cream|beige|red|ocean|blue|navy|green|sage|pink|rose gold|gold/i)?.[0]?.toLowerCase();
+    const colorAlias: Record<string, string> = { midnight: "midnight black", ocean: "ocean blue", navy: "blue" };
+    const preferredColor = namedColor ? (colorAlias[namedColor] ?? namedColor) : "";
+    selectedColor.value = loadedProduct.colors?.find((color) => color.toLowerCase() === preferredColor) ?? loadedProduct.colors?.[0] ?? "";
     if (intelligenceApi.enabled) {
       const [review, recommendations] = await Promise.all([intelligenceApi.reviewSummary(loadedProduct.id), intelligenceApi.recommendations(loadedProduct.id)]);
       aiReview.value = review;
@@ -77,7 +95,7 @@ function price(value: number) {
 }
 function addCart(goToCart = false) {
   if (!product.value) return;
-  for (let i = 0; i < quantity.value; i++) shop.addToCart(product.value.id);
+  for (let i = 0; i < quantity.value; i++) shop.addToCart(product.value.id, undefined, undefined, activeColor.value || undefined);
   if (goToCart) router.push("/cart");
   else {
     added.value = true;
@@ -112,33 +130,37 @@ function addCart(goToCart = false) {
       <section class="product-detail-grid">
         <div class="gallery">
           <div class="gallery-main">
-            <ImageWithFallback :src="product.image" :alt="product.name" /><span
+            <ImageWithFallback :src="currentProductImage" :alt="`${product.name}${activeColor ? ` in ${activeColor}` : ''}, photo ${selectedImageIndex + 1} of ${productImages.length}`" :style="{ filter: activeImageFilter }" />
+            <button v-if="productImages.length > 1" class="gallery-arrow gallery-arrow-left" aria-label="Previous product photo" @click="selectedImageIndex = (selectedImageIndex - 1 + productImages.length) % productImages.length"><ChevronLeft /></button>
+            <button v-if="productImages.length > 1" class="gallery-arrow gallery-arrow-right" aria-label="Next product photo" @click="selectedImageIndex = (selectedImageIndex + 1) % productImages.length"><ChevronRight /></button>
+            <span class="gallery-counter">{{ selectedImageIndex + 1 }} / {{ productImages.length }}</span><span
               v-if="product.badge"
               class="product-badge"
               >{{ product.badge }}</span
             >
           </div>
-          <div class="gallery-thumbs">
-            <button
-              class="thumb active"
-              :aria-label="`${product.name} image 1`"
-            >
-              <ImageWithFallback
-                :src="product.image"
-                :alt="product.name"
-              /></button
-            ><button
-              class="thumb"
-              :aria-label="`${product.name} alternate view`"
-            >
-              <ImageWithFallback
-                :src="product.image"
-                :alt="product.name"
-              /></button
-            ><button class="thumb-placeholder" aria-label="More product photos">
-              +3
+          <div v-if="productImages.length > 1" class="gallery-thumbs">
+            <button v-for="(image, index) in productImages" :key="image" class="thumb" :class="{ active: selectedImageIndex === index }" :aria-label="`Show product photo ${index + 1}`" :aria-pressed="selectedImageIndex === index" @click="selectedImageIndex = index">
+              <ImageWithFallback :src="image" :alt="`${product.name} ${activeColor} photo ${index + 1}`" :style="{ filter: activeImageFilter }" />
             </button>
           </div>
+          <div v-if="product.colors?.length" class="gallery-thumbs color-thumbs">
+            <button
+              v-for="color in product.colors"
+              :key="color"
+              class="thumb"
+              :class="{ active: activeColor === color }"
+              :aria-label="`${product.name} ${color} color preview`"
+              :title="color"
+              @click="selectedColor = color"
+            >
+              <ImageWithFallback
+                :src="currentProductImage"
+                :alt="`${product.name} in ${color}`"
+                :style="{ filter: getProductColorFilter(color) }"
+            /></button>
+          </div>
+          <a v-if="product.imageSourceUrl && product.imageSourceName" class="photo-source-link" :href="product.imageSourceUrl" target="_blank" rel="noreferrer">Official product photos: {{ product.imageSourceName }}</a>
         </div>
         <div class="product-details">
           <div class="eyebrow">
@@ -166,31 +188,29 @@ function addCart(goToCart = false) {
           <p class="tax-note">Inclusive of applicable taxes</p>
           <div v-if="product.colors?.length" class="option-block">
             <b
-              >Color <span>{{ selectedColor || product.colors[0] }}</span></b
+              >Color <span>{{ activeColor }}</span></b
             >
             <div class="swatches">
               <button
                 v-for="color in product.colors"
                 :key="color"
-                :class="{
-                  active:
-                    selectedColor === color ||
-                    (!selectedColor && color === product.colors?.[0]),
-                }"
+                :class="{ active: activeColor === color }"
                 :aria-label="color"
                 :title="color"
+                :aria-pressed="activeColor === color"
                 @click="selectedColor = color"
               >
-                <i />
+                <i :style="{ backgroundColor: getProductColorHex(color) }" />
               </button>
             </div>
           </div>
           <div class="availability">
             <Check :size="16" /><b>{{
-              product.stock < 10 ? "Only a few left" : "In stock"
+              product.stock < 10 ? `Only ${product.stock} left` : `${product.stock} left in stock`
             }}</b
             ><span>· Ships from {{ product.seller }}</span>
           </div>
+          <div class="detail-sales-note">{{ product.soldLast24h ?? 0 }} sold in the last 24 hours <span>· sample catalogue data</span></div>
           <div class="quantity-row">
             <b>Quantity</b>
             <div class="quantity-control">
@@ -337,7 +357,7 @@ function addCart(goToCart = false) {
                   <p>{{ review.comment }}</p>
                   <div v-if="review.image || review.video" class="demo-review-media">
                     <img v-if="review.image" :src="review.image" :alt="`Sample customer photo of ${product?.name}`" loading="lazy" />
-                    <video v-if="review.video" controls preload="none" :poster="product?.image" aria-label="Sample demo review video"><source :src="review.video" type="video/mp4" />Video playback is not supported in this browser.</video>
+                    <video v-if="review.video" controls preload="none" :poster="currentProductImage" aria-label="Sample demo review video"><source :src="review.video" type="video/mp4" />Video playback is not supported in this browser.</video>
                   </div>
                   <small class="demo-review-note">Illustrative demo content · not a verified buyer review</small>
                 </div>

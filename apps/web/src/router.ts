@@ -22,6 +22,7 @@ import ContactPage from "./views/ContactPage.vue";
 import ChatPage from "./views/ChatPage.vue";
 import FlashSalesPage from "./views/FlashSalesPage.vue";
 import AssistantPage from "./views/AssistantPage.vue";
+import CollectionPage from "./views/CollectionPage.vue";
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -46,6 +47,9 @@ export const router = createRouter({
     { path: "/wishlist", component: WishlistPage, meta: { title: "Wishlist" } },
     { path: "/cart", component: CartPage, meta: { title: "Shopping cart" } },
     { path: "/flash-sales", component: FlashSalesPage, meta: { title: "Flash sales" } },
+    { path: "/deals", component: CollectionPage, meta: { title: "Today's deals", collection: "deals" } },
+    { path: "/new-arrivals", component: CollectionPage, meta: { title: "New arrivals", collection: "newest" } },
+    { path: "/brands", component: CollectionPage, meta: { title: "Top brands", collection: "brands" } },
     { path: "/assistant", component: AssistantPage, meta: { title: "Shopping assistant" } },
     {
       path: "/checkout",

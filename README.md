@@ -10,7 +10,22 @@ BazaarX is a multi-vendor commerce platform for shoppers, independent sellers, a
 
 The experience follows the approved BazaarX direction: white surfaces, orange actions, navy type, rounded cards, restrained shadows, responsive layouts, and the BazaarX logo image supplied for this project. The code is organized as a small monorepo so six developers can work across buyer web, seller portal, admin portal, API, shared types/validation, and infrastructure without crowding one application folder.
 
-All three portals use the supplied BazaarX logo asset. From the buyer storefront, **Sell with us** opens the seller onboarding flow. A shared catalog provides 500 image-backed sample products across eight categories, with hot-selling labels, discounted deals, and load-more controls. Product review cards use clearly marked illustrative demo content.
+All three portals use the supplied BazaarX logo asset. From the buyer storefront, **Sell with us** opens the seller onboarding flow. The shared catalog provides 565 demo listings across eight categories and 133 brands. The Top Brands directory supports brand search and category filters, and links each brand to its catalog items. Brand marks use public icon/logo sources where available and a generated initials icon when one is missing or fails to load. Product listings and 24-hour sales figures are sample demo data. Product review cards are also clearly marked as illustrative content.
+
+## Catalog at a glance
+
+The buyer catalog is organized around the item a shopper expects to see in its photo and listing title. Representative demo products include:
+
+- **Mobiles:** Samsung, Apple, Xiaomi, OPPO, vivo, Tecno, Infinix, realme, OnePlus, and Huawei smartphones.
+- **Electronics:** headphones, Bluetooth speakers, USB-C chargers and cables, USB flash drives, wireless mice, and Wi-Fi routers.
+- **Computing:** laptops from Dell, HP, Lenovo, ASUS, and Acer, alongside computers and accessories elsewhere in the catalog.
+- **Fashion:** sneakers and formal shoes, shirts and hoodies, jeans, lawn suits, kurtas, sandals, and crossbody bags.
+- **Appliances:** air conditioners, refrigerators, air fryers, televisions, blenders, and toasters.
+- **Home & Living:** bedding, cookware, kitchen appliances, lighting, and home décor.
+- **Beauty:** fragrance, face serums, moisturizers, foundation, and rose water.
+- **Watches and other daily-use categories** are also available in the catalog.
+
+Product cards link to detail screens with gallery images, variant choices where configured, specifications, stock, and illustrative recent-sales figures. Brand tiles show a public brand mark when available; otherwise, they show a generated initials icon so every brand has a visual mark. Ten named listings across phones, shoes, and electronics now use official product images and link to the source brand page. Other listings remain sample catalog entries with representative imagery; their prices, seller stock, reviews, and sales figures are demo data.
 
 ## Portal screenshots
 
@@ -28,7 +43,7 @@ Portal screenshots were captured at a 1440 px desktop viewport. Buyer, Seller, a
 
 ## Product areas
 
-- **Buyer marketplace** — 500 image-backed products in eight categories, hot-selling and discounted offers, search, product details, wishlist, cart, sign-in/sign-up, checkout, demo payment, orders/tracking, returns/refunds, notifications, support/contact, and buyer–seller chat. Product and recommendation lists have load-more controls.
+- **Buyer marketplace** — 565 demo products in eight categories and 133 brands, hot-selling and discounted offers, search, product details, wishlist, cart, sign-in/sign-up, checkout, demo payment, orders/tracking, returns/refunds, notifications, support/contact, and buyer–seller chat. Product and recommendation lists have load-more controls.
 - **Seller center** — demo sign-in and onboarding, dashboard, product list, create/edit product, stock management, order list and fulfilment, returns, promotions, finance, payouts, analytics, store/account settings, and buyer messages.
 - **Admin portal** — demo sign-in and dashboard, user and seller management, seller approval, product moderation, orders, payments, shipments, returns/refunds, promotions, vouchers, flash sales, campaigns, fraud/risk, support tickets, analytics, audit logs, and system settings.
 - **API foundation** — NestJS health, catalog, mock authentication, checkout, payment, and inventory endpoints, with request validation and Swagger documentation.

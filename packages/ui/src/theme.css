@@ -86,6 +86,33 @@ html[data-theme="dark"] :is(.flash-page-hero, .hero-note, .seller-banner, .categ
   color: #e2e8f0;
   border-color: #37414e;
 }
+html[data-theme="dark"] .collection-hero,
+html[data-theme="dark"] .deal-benefits article,
+html[data-theme="dark"] .brand-tile {
+  color: #e2e8f0;
+  background: #222a34;
+  border-color: #37414e;
+}
+html[data-theme="dark"] .collection-hero h1,
+html[data-theme="dark"] .deal-benefits b { color: #e2e8f0; }
+html[data-theme="dark"] .collection-hero p,
+html[data-theme="dark"] .deal-benefits span,
+html[data-theme="dark"] .brand-tile small { color: #a7b2c1; }
+html[data-theme="dark"] .brand-logo-frame { background: #edf0f4; }
+html[data-theme="dark"] .brand-logo-frame.brand-logo-dark { background: #151515; }
+html[data-theme="dark"] .brand-logo-frame .brand-logo-fallback { color: #26364b; }
+html[data-theme="dark"] .brand-directory-tools,
+html[data-theme="dark"] .brand-search { color: #b7c2d0; }
+html[data-theme="dark"] .brand-category-filters button { color: #d0d8e3; background: #202833; border-color: #455160; }
+html[data-theme="dark"] .brand-category-filters button.active { color: #ffe1d5; background: #542e24; border-color: #d56a46; }
+html[data-theme="dark"] .collection-clock,
+html[data-theme="dark"] .bundle-bar {
+  color: #e2e8f0;
+  background: #1b222b;
+  border-color: #455160;
+}
+html[data-theme="dark"] .bundle-bar b { color: #e2e8f0; }
+html[data-theme="dark"] .bundle-bar span { color: #a7b2c1; }
 html[data-theme="dark"] .product-image-link img,
 html[data-theme="dark"] .gallery-main img {
   mix-blend-mode: normal;
@@ -274,6 +301,12 @@ html[data-theme="dark"] .top-strip { color: #b7c2d0; }
 html[data-theme="dark"] .offer-section .section-heading { background: #2a2b2c; border-color: #57452b; }
 html[data-theme="dark"] .offer-flame { color: #ff9652; }
 html[data-theme="dark"] .product-card .product-discount-badge { background: #c73a35; }
+html[data-theme="dark"] .product-sales-line,
+html[data-theme="dark"] .detail-sales-note { color: #c2ccda; }
+html[data-theme="dark"] .product-sales-line span,
+html[data-theme="dark"] .detail-sales-note span { color: #a7b2c1; }
+html[data-theme="dark"] .product-card .stock-tag { color: #71d5a5; }
+html[data-theme="dark"] .product-card .stock-tag.low-stock { color: #ff9c8f; }
 html[data-theme="dark"] .portal main > header label,
 html[data-theme="dark"] .seller-panel input,
 html[data-theme="dark"] .seller-panel select,

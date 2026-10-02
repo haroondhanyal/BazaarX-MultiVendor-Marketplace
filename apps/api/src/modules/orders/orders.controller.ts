@@ -31,6 +31,8 @@ class CheckoutItemDto {
   @IsString() productId!: string;
   @IsInt() @Min(1) quantity!: number;
   @IsOptional() @IsString() flashSaleId?: string;
+  @IsOptional() @IsString() color?: string;
+  @IsOptional() @IsIn(["today-3-for-2"]) dealId?: string;
 }
 class CheckoutDto {
   @IsArray()
@@ -58,6 +60,7 @@ interface OrderRecord {
   subtotal: number;
   deliveryFee: number;
   voucherDiscount: number;
+  dealDiscount?: number;
   total: number;
   items: Array<{
     productId: string;
@@ -67,6 +70,8 @@ interface OrderRecord {
     quantity: number;
     seller: string;
     flashSaleId?: string;
+    color?: string;
+    dealId?: string;
   }>;
 }
 const orders = new PersistentMap<string, OrderRecord>("orders");
@@ -97,16 +102,31 @@ export class OrdersController {
       const product = catalog.find((item) => item.id === line.productId);
       if (!product)
         throw new BadRequestException(`Unknown product: ${line.productId}`);
+      if (line.color && !product.colors?.includes(line.color))
+        throw new BadRequestException(`Color ${line.color} is not available for ${product.name}.`);
+      const inActiveFlashSale = [...flashSales.values()].some((sale) =>
+        sale.status === "ACTIVE" && Date.now() >= Date.parse(sale.startsAt) && Date.now() <= Date.parse(sale.endsAt) && sale.items.some((item) => item.productId === product.id),
+      );
+      if (line.dealId && (!product.originalPrice || line.flashSaleId || inActiveFlashSale))
+        throw new BadRequestException(`${product.name} is not eligible for the 3 for 2 offer.`);
       if (line.quantity > product.stock)
         throw new BadRequestException(`Insufficient stock for ${product.name}`);
       const flash = line.flashSaleId ? activeFlashPrice(line.flashSaleId, product.id, line.quantity) : undefined;
       if (line.flashSaleId && !flash) throw new BadRequestException("The flash sale price is no longer available for this quantity.");
-      return { product, quantity: line.quantity, flash };
+      return { product, quantity: line.quantity, flash, color: line.color, dealId: line.dealId };
     });
+    const dealUnits = lines.filter((line) => line.dealId === "today-3-for-2").reduce((sum, line) => sum + line.quantity, 0);
+    const freeUnits = Math.floor(dealUnits / 3);
+    const dealDiscount = lines
+      .filter((line) => line.dealId === "today-3-for-2")
+      .flatMap((line) => Array.from({ length: line.quantity }, () => line.flash?.price ?? line.product.price))
+      .sort((a, b) => a - b)
+      .slice(0, freeUnits)
+      .reduce((sum, price) => sum + price, 0);
     const subtotal = lines.reduce(
       (sum, line) => sum + (line.flash?.price ?? line.product.price) * line.quantity,
       0,
-    );
+    ) - dealDiscount;
     const deliveryFee =
       body.deliveryMethod === "express" ? 800 : subtotal >= 25000 ? 0 : 350;
     let voucherDiscount = 0;
@@ -127,14 +147,17 @@ export class OrdersController {
       subtotal,
       deliveryFee,
       voucherDiscount,
+      dealDiscount: dealDiscount || undefined,
       total: subtotal + deliveryFee - voucherDiscount,
-      items: lines.map(({ product, quantity, flash }) => ({
+      items: lines.map(({ product, quantity, flash, color, dealId }) => ({
         productId: product.id,
         name: product.name,
         image: product.image,
         price: flash?.price ?? product.price,
         quantity,
         seller: product.seller,
+        ...(color ? { color } : {}),
+        ...(dealId ? { dealId } : {}),
         ...(flash ? { flashSaleId: flash.sale.id } : {}),
       })),
     };

@@ -78,10 +78,12 @@ async function placeOrder() {
     let order;
     if (orderApi.enabled) {
       order = await orderApi.checkout({
-        items: shop.cartProducts.map(({ product, quantity, flashSaleId }) => ({
+        items: shop.cartProducts.map(({ product, quantity, flashSaleId, color, dealId }) => ({
           productId: product.id,
           quantity,
           flashSaleId,
+          color,
+          dealId,
         })),
         address: shop.checkoutAddress,
         paymentMethod: shop.selectedPayment,
@@ -247,8 +249,9 @@ async function placeOrder() {
           </div>
           <div class="summary-row">
             <span>Items ({{ shop.cartCount }})</span
-            ><b>PKR {{ money(shop.cartTotal) }}</b>
+            ><b>PKR {{ money(shop.cartTotal + shop.dealDiscount) }}</b>
           </div>
+          <div v-if="shop.dealDiscount" class="summary-row deal-saving-row"><span>3 for 2 saving</span><b>− PKR {{ money(shop.dealDiscount) }}</b></div>
           <div class="summary-row">
             <span>Delivery</span
             ><b>{{

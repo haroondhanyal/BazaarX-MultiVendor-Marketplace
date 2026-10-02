@@ -23,9 +23,10 @@ import ProductCard from "../components/ProductCard.vue";
 const hotVisible = ref(12);
 const dealVisible = ref(8);
 const hotSelling = computed(() => [...products].sort((a, b) =>
-  b.reviews * b.rating - a.reviews * a.rating,
+  (b.soldLast24h ?? 0) - (a.soldLast24h ?? 0) || b.rating - a.rating,
 ));
-const deals = computed(() => [...products].filter((product) => product.originalPrice)
+const fallbackFlashIds = new Set(products.filter((product) => product.originalPrice).slice(0, 24).map((product) => product.id));
+const deals = computed(() => [...products].filter((product) => product.originalPrice && !fallbackFlashIds.has(product.id))
   .sort((a, b) => (b.originalPrice! - b.price) / b.originalPrice! - (a.originalPrice! - a.price) / a.originalPrice!));
 const visibleHotSelling = computed(() => hotSelling.value.slice(0, hotVisible.value));
 const visibleDeals = computed(() => deals.value.slice(0, dealVisible.value));
@@ -58,7 +59,7 @@ const countdown = ref("08 : 42 : 16");
           <div class="hero-actions">
             <RouterLink to="/search" class="button button-primary"
               >Explore the marketplace <ArrowRight :size="17" /></RouterLink
-            ><RouterLink to="/flash-sales" class="button button-quiet"
+            ><RouterLink to="/deals" class="button button-quiet"
               >See today's deals</RouterLink
             >
           </div>
@@ -157,7 +158,7 @@ const countdown = ref("08 : 42 : 16");
       <section class="container section-block offer-section">
         <div class="section-heading">
           <div><span class="eyebrow">LIMITED-TIME SAVINGS</span><h2>Today’s hot deals <span class="offer-flame">⚡</span></h2><p>Reduced prices on popular BazaarX finds.</p></div>
-          <RouterLink to="/flash-sales" class="text-link">More offers <ArrowRight :size="16" /></RouterLink>
+          <RouterLink to="/deals" class="text-link">More offers <ArrowRight :size="16" /></RouterLink>
         </div>
         <div class="product-grid">
           <ProductCard v-for="product in visibleDeals" :key="product.id" :product="product" />

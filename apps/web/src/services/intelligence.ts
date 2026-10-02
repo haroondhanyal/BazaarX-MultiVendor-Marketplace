@@ -9,6 +9,6 @@ export const intelligenceApi = {
   reviewSummary(productId: string) { return request<{productId:string;count:number;sentiment:string;positives:string[];complaints:string[];summary:string}>(`/ai/reviews/summary?productId=${encodeURIComponent(productId)}`); },
   recommendations(productId?: string) { return request<{data:Product[];strategy:string}>(`/ai/recommendations${productId ? `?productId=${encodeURIComponent(productId)}` : ''}`); },
 };
-export interface Product { id:string;slug:string;name:string;category:string;brand:string;description:string;price:number;originalPrice?:number;rating:number;reviews:number;seller:string;stock:number;image:string;badge?:string;colors?:string[];specifications?:Record<string,string> }
+export interface Product { id:string;slug:string;name:string;category:string;brand:string;description:string;price:number;originalPrice?:number;rating:number;reviews:number;seller:string;stock:number;soldLast24h?:number;image:string;images?:string[];badge?:string;colors?:string[];specifications?:Record<string,string> }
 export interface AssistantResult { provider:string;answer:string;criteria:{budget?:number;category?:string;preferences:string};products:Product[] }
 export interface ListingCopy { provider:string;seoTitle:string;shortDescription:string;description:string;bullets:string[];keywords:string[] }

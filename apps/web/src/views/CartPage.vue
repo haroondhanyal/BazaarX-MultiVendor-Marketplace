@@ -14,6 +14,7 @@ import { useShopStore } from "../stores/shop";
 import SiteHeader from "../components/SiteHeader.vue";
 import SiteFooter from "../components/SiteFooter.vue";
 import StatusView from "../components/StatusView.vue";
+import { getProductColorFilter } from "../utils/product-image";
 const shop = useShopStore();
 const router = useRouter();
 const delivery = computed(() => (shop.cartTotal >= 25000 ? 0 : 350));
@@ -55,13 +56,13 @@ function money(value: number) {
           </div>
           <article
             v-for="line in shop.cartProducts"
-            :key="line.product.id"
+            :key="`${line.product.id}:${line.color ?? ''}:${line.dealId ?? ''}`"
             class="cart-item"
           >
             <RouterLink
               :to="`/product/${line.product.slug}`"
               class="cart-item-image"
-              ><img :src="line.product.image" :alt="line.product.name"
+              ><img :src="line.product.image" :alt="`${line.product.name}${line.color ? ` in ${line.color}` : ''}`" :style="{ filter: getProductColorFilter(line.color) }"
             /></RouterLink>
             <div class="cart-item-info">
               <span class="eyebrow">{{ line.product.seller }}</span
@@ -70,12 +71,14 @@ function money(value: number) {
                 class="cart-product-name"
                 >{{ line.product.name }}</RouterLink
               ><span class="cart-stock">In stock · Ready to ship</span>
+              <span v-if="line.color" class="cart-stock">Color: {{ line.color }}</span>
+              <span v-if="line.dealId === 'today-3-for-2'" class="cart-stock">Part of your 3 for 2 bundle</span>
               <div class="cart-mobile-bottom">
                 <div class="quantity-control">
                   <button
                     aria-label="Decrease quantity"
                     @click="
-                      shop.setQuantity(line.product.id, line.quantity - 1)
+                      shop.setQuantity(line.product.id, line.quantity - 1, line.color, line.dealId)
                     "
                   >
                     <Minus :size="14" /></button
@@ -84,7 +87,7 @@ function money(value: number) {
                     aria-label="Increase quantity"
                     :disabled="line.quantity >= line.product.stock"
                     @click="
-                      shop.setQuantity(line.product.id, line.quantity + 1)
+                      shop.setQuantity(line.product.id, line.quantity + 1, line.color, line.dealId)
                     "
                   >
                     <Plus :size="14" />
@@ -94,7 +97,7 @@ function money(value: number) {
                 ><button
                   class="remove-button"
                   :aria-label="`Remove ${line.product.name}`"
-                  @click="shop.setQuantity(line.product.id, 0)"
+                  @click="shop.setQuantity(line.product.id, 0, line.color, line.dealId)"
                 >
                   <Trash2 :size="16" />
                 </button>
@@ -124,8 +127,9 @@ function money(value: number) {
           <h2>Order summary</h2>
           <div class="summary-row">
             <span>Items ({{ shop.cartCount }})</span
-            ><b>PKR {{ money(shop.cartTotal) }}</b>
+            ><b>PKR {{ money(shop.cartTotal + shop.dealDiscount) }}</b>
           </div>
+          <div v-if="shop.dealDiscount" class="summary-row deal-saving-row"><span>3 for 2 saving</span><b>− PKR {{ money(shop.dealDiscount) }}</b></div>
           <div class="summary-row">
             <span>Delivery</span
             ><b>{{ delivery === 0 ? "FREE" : `PKR ${money(delivery)}` }}</b>

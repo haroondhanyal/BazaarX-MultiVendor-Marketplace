@@ -25,14 +25,23 @@ export const useShopStore = defineStore("shop", () => {
   const cartCount = computed(() =>
     cart.value.reduce((sum, item) => sum + item.quantity, 0),
   );
+  const dealDiscount = computed(() => {
+    const lines = cart.value.filter((line) => line.dealId === "today-3-for-2");
+    let freeItems = Math.floor(lines.reduce((sum, line) => sum + line.quantity, 0) / 3);
+    return lines
+      .flatMap((line) => Array.from({ length: line.quantity }, () => products.find((product) => product.id === line.productId)?.price ?? 0))
+      .sort((a, b) => a - b)
+      .slice(0, freeItems)
+      .reduce((sum, price) => sum + price, 0);
+  });
   const cartTotal = computed(() =>
-    cart.value.reduce(
+    Math.max(0, cart.value.reduce(
       (sum, line) =>
         sum +
         (line.promoPrice ?? products.find((p) => p.id === line.productId)?.price ?? 0) *
           line.quantity,
       0,
-    ),
+    ) - dealDiscount.value),
   );
   const savedProducts = computed(() =>
     wishlist.value
@@ -44,7 +53,9 @@ export const useShopStore = defineStore("shop", () => {
       .map((line) => ({
         product: { ...products.find((p) => p.id === line.productId)!, price: line.promoPrice ?? products.find((p) => p.id === line.productId)!.price },
         quantity: line.quantity,
+        color: line.color,
         flashSaleId: line.flashSaleId,
+        dealId: line.dealId,
       }))
       .filter((line) => line.product),
   );
@@ -86,21 +97,25 @@ export const useShopStore = defineStore("shop", () => {
   );
   watch(voucherCode, (value) => localStorage.setItem("bx-voucher-code", JSON.stringify(value)));
 
-  function addToCart(productId: string, flashSaleId?: string, promoPrice?: number) {
-    const item = cart.value.find((line) => line.productId === productId);
+  function addToCart(productId: string, flashSaleId?: string, promoPrice?: number, color?: string, dealId?: string) {
+    const item = cart.value.find((line) => line.productId === productId && line.color === color && line.dealId === dealId);
     const product = products.find((p) => p.id === productId);
     if (!product || product.stock < 1) return;
     if (item) {
       item.quantity = Math.min(item.quantity + 1, product.stock);
       if (flashSaleId) { item.flashSaleId = flashSaleId; item.promoPrice = promoPrice; }
-    } else cart.value.push({ productId, quantity: 1, ...(flashSaleId ? { flashSaleId, promoPrice } : {}) });
+    } else cart.value.push({ productId, quantity: 1, ...(color ? { color } : {}), ...(flashSaleId ? { flashSaleId, promoPrice } : {}), ...(dealId ? { dealId } : {}) });
   }
-  function setQuantity(productId: string, quantity: number) {
-    const line = cart.value.find((item) => item.productId === productId);
+  function addDealBundle(productIds: string[]) {
+    if (productIds.length !== 3 || new Set(productIds).size !== 3) return;
+    for (const productId of productIds) addToCart(productId, undefined, undefined, undefined, "today-3-for-2");
+  }
+  function setQuantity(productId: string, quantity: number, color?: string, dealId?: string) {
+    const line = cart.value.find((item) => item.productId === productId && item.color === color && item.dealId === dealId);
     const product = products.find((p) => p.id === productId);
     if (!line) return;
     if (quantity < 1)
-      cart.value = cart.value.filter((item) => item.productId !== productId);
+      cart.value = cart.value.filter((item) => item.productId !== productId || item.color !== color || item.dealId !== dealId);
     else line.quantity = Math.min(quantity, product?.stock ?? quantity);
   }
   function toggleWishlist(productId: string) {
@@ -141,16 +156,19 @@ export const useShopStore = defineStore("shop", () => {
       subtotal,
       deliveryFee,
       voucherDiscount: voucherDiscount.value,
+      dealDiscount: dealDiscount.value || undefined,
       voucherCode: voucherCode.value || undefined,
       total: Math.max(0, subtotal + deliveryFee - voucherDiscount.value),
-      items: cartProducts.value.map(({ product, quantity }) => ({
+      items: cartProducts.value.map(({ product, quantity, color, flashSaleId, dealId }) => ({
         productId: product.id,
         name: product.name,
         image: product.image,
         price: product.price,
         quantity,
         seller: product.seller,
-        ...(cart.value.find((line) => line.productId === product.id)?.flashSaleId ? { flashSaleId: cart.value.find((line) => line.productId === product.id)?.flashSaleId } : {}),
+        ...(color ? { color } : {}),
+        ...(flashSaleId ? { flashSaleId } : {}),
+        ...(dealId ? { dealId } : {}),
       })),
     };
     saveOrder(order);
@@ -169,9 +187,11 @@ export const useShopStore = defineStore("shop", () => {
     voucherCode,
     cartCount,
     cartTotal,
+    dealDiscount,
     savedProducts,
     cartProducts,
     addToCart,
+    addDealBundle,
     setQuantity,
     toggleWishlist,
     login,

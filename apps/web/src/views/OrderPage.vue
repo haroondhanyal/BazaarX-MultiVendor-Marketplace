@@ -117,8 +117,9 @@ const activeStep = computed(() =>
           <aside class="order-summary">
             <h2>Order information</h2>
             <div class="summary-row">
-              <span>Items</span><b>PKR {{ money(order.subtotal) }}</b>
+              <span>Items</span><b>PKR {{ money(order.subtotal + (order.dealDiscount ?? 0)) }}</b>
             </div>
+            <div v-if="order.dealDiscount" class="summary-row"><span>3 for 2 saving</span><b>− PKR {{ money(order.dealDiscount) }}</b></div>
             <div class="summary-row">
               <span>Delivery</span
               ><b>{{

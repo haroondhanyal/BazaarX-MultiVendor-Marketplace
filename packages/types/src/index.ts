@@ -24,7 +24,12 @@ export interface Product {
   reviews: number;
   seller: string;
   stock: number;
+  soldLast24h?: number;
   image: string;
+  images?: string[];
+  imageSourceUrl?: string;
+  imageSourceName?: string;
+  colorImages?: Record<string, string[]>;
   badge?: string;
   colors?: string[];
   specifications?: Record<string, string>;
@@ -32,8 +37,10 @@ export interface Product {
 export interface CartLine {
   productId: string;
   quantity: number;
+  color?: string;
   flashSaleId?: string;
   promoPrice?: number;
+  dealId?: string;
 }
 
 export type OrderStatus =
@@ -55,6 +62,7 @@ export interface MarketplaceOrder {
   subtotal: number;
   deliveryFee: number;
   voucherDiscount?: number;
+  dealDiscount?: number;
   voucherCode?: string;
   total: number;
   items: Array<{
@@ -64,5 +72,7 @@ export interface MarketplaceOrder {
     price: number;
     quantity: number;
     seller: string;
+    color?: string;
+    dealId?: string;
   }>;
 }
