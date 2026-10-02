@@ -35,6 +35,9 @@ export const marketplaceApi = {
   generateListing(input: {title:string;category:string;specifications?:string}) { return request<ListingCopy>('/ai/listing/generate',{method:'POST',body:JSON.stringify(input)}); },
   listingQuality(input: {title:string;category:string;description?:string;images?:string[];specifications?:string}) { return request<{score:number;suggestions:string[]}>('/ai/listing/quality',{method:'POST',body:JSON.stringify(input)}); },
 };
+export function submitSellerApplication(answers: string[]) {
+  return request<{id:string;answers:string[];status:string;submittedAt:string}>("/sellers/applications",{method:"POST",body:JSON.stringify({answers})});
+}
 export async function uploadProductImage(file: File) {
   if (!base) throw new Error("VITE_API_URL is not configured.");
   const form = new FormData(); form.set("image", file);

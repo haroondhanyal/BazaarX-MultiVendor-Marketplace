@@ -13,6 +13,7 @@ import { ConversationsController, NotificationsController, SupportController } f
 import { AiController } from "./ai/ai.controller";
 import { CommunicationGateway } from "./communication/communication.gateway";
 import { UploadsController } from "./uploads/uploads.controller";
+import { SellersController } from "./sellers/sellers.controller";
 
 @Module({
   controllers: [
@@ -32,6 +33,7 @@ import { UploadsController } from "./uploads/uploads.controller";
     SupportController,
     AiController,
     UploadsController,
+    SellersController,
   ],
   providers: [CommunicationGateway],
 })

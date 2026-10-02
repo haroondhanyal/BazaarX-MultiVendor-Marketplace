@@ -22,6 +22,8 @@ export const adminApi = {
   createFlashSale(input: object) { return request<AdminFlashSale>("/promotions/flash-sales", { method: "POST", body: JSON.stringify(input) }); },
   updateFlashSale(id: string, status: string) { return request<AdminFlashSale>(`/promotions/flash-sales/${encodeURIComponent(id)}/status`, { method: "PATCH", body: JSON.stringify({ status }) }); },
   analytics() { return request<MarketplaceAnalytics>("/analytics/marketplace"); },
+  sellerApplications() { return request<{data:SellerApplication[]}>('/sellers/applications'); },
+  decideSellerApplication(id:string,status:"APPROVED"|"REJECTED") { return request<SellerApplication>(`/sellers/applications/${encodeURIComponent(id)}`,{method:"PATCH",body:JSON.stringify({status,note:`Application ${status.toLowerCase()} by Marketplace admin.`})}); },
   tickets() { return request<{data:AdminTicket[]}>('/support/tickets'); },
   createTicket(input: {userId:string;category:string;subject:string;message:string}) { return request<AdminTicket>('/support/tickets',{method:'POST',body:JSON.stringify(input)}); },
   updateTicket(id: string, status: string) { return request<AdminTicket>(`/support/tickets/${encodeURIComponent(id)}/status`, {method:'PATCH',body:JSON.stringify({status})}); },
@@ -34,3 +36,4 @@ export interface AdminVoucher { code:string; title:string; type:string; status:s
 export interface AdminFlashSale { id:string; name:string; status:string; startsAt:string; endsAt:string; items:Array<{productId:string;flashPrice:number;allocatedStock:number;sold:number;product?:{name:string}}> }
 export interface MarketplaceAnalytics { gmv:number;netRevenue:number;orders:number;customers:number;activeSellers:number;averageOrderValue:number;returns:number;refunds:number;commissionRevenue:number }
 export interface AdminTicket { id:string;userId:string;category:string;subject:string;message:string;status:string;createdAt:string;comments:Array<{id:string;author:string;message:string;createdAt:string}> }
+export interface SellerApplication { id:string;answers:string[];status:"PENDING"|"APPROVED"|"REJECTED";submittedAt:string;updatedAt:string;reviewNote?:string }

@@ -48,6 +48,8 @@ docs/        local setup and team development notes
 
 Each portal has its own views, router, services, and shell. API modules group endpoints by marketplace domain. Small frontend service modules own HTTP calls, and views call those services. Prisma models and SQL migrations document the persistent data shape.
 
+Seller onboarding submits a seven-section application to the API. Admins can approve or reject applications from the seller review page. The storefront opens the dedicated seller and admin apps through `VITE_SELLER_PORTAL_URL` and `VITE_ADMIN_PORTAL_URL`.
+
 Phase 9 chat uses Socket.IO events for live messages, typing, and read receipts, with a 30-second REST refresh when a socket disconnects. The demo does not authenticate socket participants. Image uploads accept JPG, PNG, and WebP files up to 5 MB and save them locally under `apps/api/uploads`. Email, SMS, and push channels can POST to provider webhooks configured through `.env.example`.
 
 Phase 10 uses a deterministic local mock AI provider behind a provider interface. It searches seeded catalog products and returns generated demo review summaries without calling an external model. Replace the provider and review source before relying on generated copy or sentiment for live listings.

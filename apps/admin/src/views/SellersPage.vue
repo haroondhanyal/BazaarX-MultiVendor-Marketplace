@@ -1,19 +1,40 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
-import { adminData } from "../data";
+import { computed, onMounted, ref } from "vue";
+import { adminData, type AdminSeller } from "../data";
 import { Search, Check, X, Store } from "lucide-vue-next";
+import { adminApi, type SellerApplication } from "../services/marketplace";
 const query = ref("");
 const status = ref("All");
-const sellers = computed(() =>
-  adminData.sellers.filter(
+const liveApplications = ref<AdminSeller[] | null>(null);
+const loading = ref(false);
+const error = ref("");
+const sellers = computed(() => {
+  const source = liveApplications.value ?? adminData.sellers;
+  return source.filter(
     (s) =>
       (status.value === "All" || s.status === status.value) &&
       `${s.name} ${s.location}`
         .toLowerCase()
         .includes(query.value.toLowerCase()),
-  ),
-);
-function decide(id: string, status: "Approved" | "Rejected") {
+  );
+});
+function mapApplication(application: SellerApplication): AdminSeller {
+  return { id:application.id,name:application.answers[3] || application.answers[0],location:application.answers[4],submitted:new Date(application.submittedAt).toLocaleDateString(),status:application.status === "PENDING" ? "Pending" : application.status === "APPROVED" ? "Approved" : "Rejected" };
+}
+async function loadApplications() {
+  if (!adminApi.enabled) return;
+  loading.value=true;error.value="";
+  try { liveApplications.value=(await adminApi.sellerApplications()).data.map(mapApplication); }
+  catch(cause) { error.value=cause instanceof Error?cause.message:"Seller applications could not be loaded."; }
+  finally { loading.value=false; }
+}
+onMounted(() => { void loadApplications(); });
+async function decide(id: string, status: "Approved" | "Rejected") {
+  if (adminApi.enabled && liveApplications.value?.some((seller)=>seller.id===id)) {
+    try { await adminApi.decideSellerApplication(id,status.toUpperCase() as "APPROVED"|"REJECTED"); await loadApplications(); }
+    catch(cause) { error.value=cause instanceof Error?cause.message:"Application review could not be saved."; }
+    return;
+  }
   const seller = adminData.sellers.find((item) => item.id === id);
   if (seller) seller.status = status;
 }
@@ -27,6 +48,8 @@ function decide(id: string, status: "Approved" | "Rejected") {
         <p>Review applications before stores can list products.</p>
       </div>
     </div>
+    <p v-if="loading" role="status">Loading seller applications…</p>
+    <p v-if="error" class="admin-error" role="alert">{{ error }}</p>
     <div class="admin-panel">
       <div class="admin-tools">
         <label

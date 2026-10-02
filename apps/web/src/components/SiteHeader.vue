@@ -16,6 +16,8 @@ const shop = useShopStore();
 const router = useRouter();
 const term = ref("");
 const menuOpen = ref(false);
+const sellerPortalUrl = import.meta.env.VITE_SELLER_PORTAL_URL || "http://localhost:5174";
+const adminPortalUrl = import.meta.env.VITE_ADMIN_PORTAL_URL || "http://localhost:5175";
 function search() {
   router.push({ path: "/search", query: term.value ? { q: term.value } : {} });
 }
@@ -26,8 +28,8 @@ function search() {
     <div class="container top-strip-inner">
       <span>Shop smarter. Live better.</span>
       <div>
-        <a href="/seller">Sell on BazaarX</a><span class="top-separator">·</span
-        ><a href="/admin">Marketplace admin</a>
+        <a :href="sellerPortalUrl">Sell on BazaarX</a><span class="top-separator">·</span
+        ><a :href="adminPortalUrl">Marketplace admin</a>
       </div>
     </div>
   </div>

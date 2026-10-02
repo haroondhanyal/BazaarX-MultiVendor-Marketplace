@@ -22,6 +22,15 @@ import {
 } from "lucide-vue-next";
 const route = useRoute();
 const isAdmin = computed(() => route.path.startsWith("/admin"));
+const portalBase = computed(() => isAdmin.value
+  ? import.meta.env.VITE_ADMIN_PORTAL_URL || "http://localhost:5175"
+  : import.meta.env.VITE_SELLER_PORTAL_URL || "http://localhost:5174");
+function portalUrl(name: string) {
+  const adminRoutes: Record<string,string> = { Users:"users",Sellers:"sellers",Products:"moderation",Orders:"orders",Payments:"payments",Shipments:"shipments",Returns:"returns",Promotions:"promotions",Support:"support","Fraud & risk":"fraud",Settings:"settings" };
+  const sellerRoutes: Record<string,string> = { Products:"products",Orders:"orders",Inventory:"inventory",Marketing:"promotions",Finance:"finance",Analytics:"analytics","Store settings":"store" };
+  const path = (isAdmin.value ? adminRoutes : sellerRoutes)[name];
+  return `${portalBase.value}${path ? `/${path}` : "/"}`;
+}
 const sellerLinks = [
   ["Dashboard", LayoutDashboard],
   ["Products", Package],
@@ -63,13 +72,13 @@ const heading = computed(
         {{ isAdmin ? "ADMIN PORTAL" : "SELLER CENTER" }}
       </p>
       <nav>
-        <RouterLink
+        <a
           v-for="([name, icon], index) in links"
           :key="name"
-          :to="`/${isAdmin ? 'admin' : 'seller'}/${index === 0 ? '' : name.toLowerCase().replaceAll(' ', '-')}`"
+          :href="portalUrl(name)"
           class="portal-nav"
           :class="{ active: index === 0 && !route.params.pathMatch?.[0] }"
-          ><component :is="icon" /><span>{{ name }}</span></RouterLink
+          ><component :is="icon" /><span>{{ name }}</span></a
         >
       </nav>
       <div class="portal-help">
@@ -134,34 +143,14 @@ const heading = computed(
                   : "Welcome to Seller Center"
               }}
             </h2>
-            <p>
-              This workspace is ready for the next implementation phase. The
-              navigation, responsive shell, and route structure are in place.
-            </p>
+            <p>The full {{ isAdmin ? "admin portal" : "seller center" }} runs as a separate app.</p>
           </div>
-          <span class="badge badge-neutral">Foundation ready</span>
-        </div>
-        <div class="portal-stats">
-          <div>
-            <span>{{ isAdmin ? "Total orders" : "Total sales" }}</span
-            ><b>{{ isAdmin ? "—" : "PKR —" }}</b
-            ><small>Connect marketplace data in a later phase</small>
-          </div>
-          <div>
-            <span>{{ isAdmin ? "Active sellers" : "Open orders" }}</span
-            ><b>—</b><small>Mock data is not configured yet</small>
-          </div>
-          <div>
-            <span>{{ isAdmin ? "Pending reviews" : "Products listed" }}</span
-            ><b>—</b><small>Ready for the catalog workflow</small>
-          </div>
+          <a class="badge badge-neutral" :href="portalBase">Open portal</a>
         </div>
         <div class="portal-empty">
-          <Boxes /><b>Your {{ heading.toLowerCase() }} workspace</b>
-          <p>
-            Phase {{ isAdmin ? "11" : "3" }} will connect these tools to the
-            marketplace API.
-          </p>
+          <Boxes /><b>Continue in {{ isAdmin ? "Admin Portal" : "Seller Center" }}</b>
+          <p>Open the dedicated app to manage {{ heading.toLowerCase() }}.</p>
+          <a :href="portalUrl(heading)">Go to {{ heading }}</a>
         </div>
       </section>
     </main>
