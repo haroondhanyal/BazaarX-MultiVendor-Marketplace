@@ -1,0 +1,266 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  phone        String?   @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  status       String    @default("ACTIVE")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  addresses    Address[]
+  seller       Seller?
+  cart         Cart?
+  wishlist     Wishlist?
+  orders       Order[]
+}
+
+model Address {
+  id         String   @id @default(cuid())
+  userId     String
+  label      String
+  recipient  String
+  phone      String
+  line1      String
+  line2      String?
+  city       String
+  postalCode String?
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isDefault])
+}
+
+model Seller {
+  id        String           @id @default(cuid())
+  userId    String           @unique
+  type      String
+  status    String           @default("DRAFT")
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  store     Store?
+  documents SellerDocument[]
+  products  Product[]
+}
+
+model SellerDocument {
+  id        String   @id @default(cuid())
+  sellerId  String
+  kind      String
+  fileUrl   String
+  status    String   @default("PENDING")
+  createdAt DateTime @default(now())
+  seller    Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+
+  @@index([sellerId, status])
+}
+
+model Store {
+  id          String   @id @default(cuid())
+  sellerId    String   @unique
+  name        String
+  slug        String   @unique
+  description String   @default("")
+  logoUrl     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  seller      Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+}
+
+model Category {
+  id        String     @id @default(cuid())
+  parentId  String?
+  name      String
+  slug      String     @unique
+  status    String     @default("ACTIVE")
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  parent    Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children  Category[] @relation("CategoryTree")
+  products  Product[]
+
+  @@index([parentId, status])
+}
+
+model Product {
+  id            String           @id @default(cuid())
+  sellerId      String?
+  categoryId    String
+  slug          String           @unique
+  name          String
+  description   String
+  brand         String
+  status        String           @default("DRAFT")
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  seller        Seller?          @relation(fields: [sellerId], references: [id])
+  category      Category         @relation(fields: [categoryId], references: [id])
+  variants      ProductVariant[]
+  inventory     Inventory?
+  cartItems     CartItem[]
+  wishlistItems WishlistItem[]
+  orderItems    OrderItem[]
+
+  @@index([categoryId, status])
+  @@index([sellerId, status])
+  @@index([name])
+}
+
+model ProductVariant {
+  id         String      @id @default(cuid())
+  productId  String
+  sku        String      @unique
+  options    Json
+  price      Int
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  inventory  Inventory?
+  orderItems OrderItem[]
+}
+
+model Inventory {
+  id           String                 @id @default(cuid())
+  productId    String?                @unique
+  variantId    String?                @unique
+  available    Int                    @default(0)
+  reserved     Int                    @default(0)
+  sold         Int                    @default(0)
+  updatedAt    DateTime               @updatedAt
+  product      Product?               @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant      ProductVariant?        @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  transactions InventoryTransaction[]
+}
+
+model InventoryTransaction {
+  id          String    @id @default(cuid())
+  inventoryId String
+  orderId     String?
+  kind        String
+  quantity    Int
+  note        String?
+  createdAt   DateTime  @default(now())
+  inventory   Inventory @relation(fields: [inventoryId], references: [id])
+
+  @@index([inventoryId, createdAt])
+  @@index([orderId])
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  cartId    String
+  productId String
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id])
+
+  @@unique([cartId, productId])
+}
+
+model Wishlist {
+  id        String         @id @default(cuid())
+  userId    String         @unique
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     WishlistItem[]
+}
+
+model WishlistItem {
+  id         String   @id @default(cuid())
+  wishlistId String
+  productId  String
+  createdAt  DateTime @default(now())
+  wishlist   Wishlist @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id])
+
+  @@unique([wishlistId, productId])
+}
+
+model Order {
+  id              String               @id @default(cuid())
+  publicId        String               @unique
+  userId          String
+  status          String               @default("PLACED")
+  paymentMethod   String
+  deliveryMethod  String
+  addressSnapshot Json
+  subtotal        Int
+  deliveryFee     Int
+  total           Int
+  idempotencyKey  String?              @unique
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  user            User                 @relation(fields: [userId], references: [id])
+  items           OrderItem[]
+  payments        Payment[]
+  statusHistory   OrderStatusHistory[]
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
+
+model OrderItem {
+  id        String          @id @default(cuid())
+  orderId   String
+  productId String
+  variantId String?
+  sellerId  String?
+  name      String
+  unitPrice Int
+  quantity  Int
+  order     Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product         @relation(fields: [productId], references: [id])
+  variant   ProductVariant? @relation(fields: [variantId], references: [id])
+
+  @@index([sellerId, orderId])
+}
+
+model OrderStatusHistory {
+  id        String   @id @default(cuid())
+  orderId   String
+  status    String
+  note      String?
+  createdAt DateTime @default(now())
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, createdAt])
+}
+
+model Payment {
+  id             String   @id @default(cuid())
+  orderId        String
+  method         String
+  status         String   @default("PENDING")
+  amount         Int
+  providerRef    String?
+  idempotencyKey String?  @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  order          Order    @relation(fields: [orderId], references: [id])
+
+  @@index([orderId, status])
+}

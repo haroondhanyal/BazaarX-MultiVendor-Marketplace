@@ -1,0 +1,28 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: bazaarx
+      POSTGRES_PASSWORD: bazaarx
+      POSTGRES_DB: bazaarx
+    ports: ["5432:5432"]
+    volumes: ["bazaarx-postgres:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bazaarx"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: bazaarx
+      MINIO_ROOT_PASSWORD: bazaarx-local-only
+    ports: ["9000:9000", "9001:9001"]
+    volumes: ["bazaarx-minio:/data"]
+volumes:
+  bazaarx-postgres:
+  bazaarx-minio:

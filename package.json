@@ -1,0 +1,17 @@
+{
+  "name": "bazaarx",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace @bazaarx/web",
+    "dev:web": "npm run dev --workspace @bazaarx/web",
+    "dev:seller": "npm run dev --workspace @bazaarx/seller",
+    "dev:admin": "npm run dev --workspace @bazaarx/admin",
+    "dev:api": "npm run start:dev --workspace @bazaarx/api",
+    "build": "npm run build --workspaces --if-present",
+    "type-check": "npm run type-check --workspaces --if-present"
+  }
+}
