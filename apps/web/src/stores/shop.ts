@@ -21,6 +21,7 @@ export const useShopStore = defineStore("shop", () => {
   const checkoutAddress = ref(read("bx-checkout-address", ""));
   const deliveryMethod = ref(read("bx-delivery-method", "standard"));
   const voucherDiscount = ref(read("bx-voucher-discount", 0));
+  const voucherCode = ref<string>(read("bx-voucher-code", ""));
   const cartCount = computed(() =>
     cart.value.reduce((sum, item) => sum + item.quantity, 0),
   );
@@ -28,7 +29,7 @@ export const useShopStore = defineStore("shop", () => {
     cart.value.reduce(
       (sum, line) =>
         sum +
-        (products.find((p) => p.id === line.productId)?.price ?? 0) *
+        (line.promoPrice ?? products.find((p) => p.id === line.productId)?.price ?? 0) *
           line.quantity,
       0,
     ),
@@ -41,8 +42,9 @@ export const useShopStore = defineStore("shop", () => {
   const cartProducts = computed(() =>
     cart.value
       .map((line) => ({
-        product: products.find((p) => p.id === line.productId)!,
+        product: { ...products.find((p) => p.id === line.productId)!, price: line.promoPrice ?? products.find((p) => p.id === line.productId)!.price },
         quantity: line.quantity,
+        flashSaleId: line.flashSaleId,
       }))
       .filter((line) => line.product),
   );
@@ -82,13 +84,16 @@ export const useShopStore = defineStore("shop", () => {
   watch(voucherDiscount, (value) =>
     localStorage.setItem("bx-voucher-discount", JSON.stringify(value)),
   );
+  watch(voucherCode, (value) => localStorage.setItem("bx-voucher-code", JSON.stringify(value)));
 
-  function addToCart(productId: string) {
+  function addToCart(productId: string, flashSaleId?: string, promoPrice?: number) {
     const item = cart.value.find((line) => line.productId === productId);
     const product = products.find((p) => p.id === productId);
     if (!product || product.stock < 1) return;
-    if (item) item.quantity = Math.min(item.quantity + 1, product.stock);
-    else cart.value.push({ productId, quantity: 1 });
+    if (item) {
+      item.quantity = Math.min(item.quantity + 1, product.stock);
+      if (flashSaleId) { item.flashSaleId = flashSaleId; item.promoPrice = promoPrice; }
+    } else cart.value.push({ productId, quantity: 1, ...(flashSaleId ? { flashSaleId, promoPrice } : {}) });
   }
   function setQuantity(productId: string, quantity: number) {
     const line = cart.value.find((item) => item.productId === productId);
@@ -113,6 +118,12 @@ export const useShopStore = defineStore("shop", () => {
     orders.value.unshift(order);
     cart.value = [];
     voucherDiscount.value = 0;
+    voucherCode.value = "";
+  }
+  function updateOrder(order: MarketplaceOrder) {
+    const index = orders.value.findIndex((item) => item.id === order.id);
+    if (index < 0) orders.value.unshift(order);
+    else orders.value[index] = { ...orders.value[index], ...order };
   }
   function createOrder(): MarketplaceOrder | undefined {
     if (!cartProducts.value.length || !checkoutAddress.value.trim())
@@ -130,6 +141,7 @@ export const useShopStore = defineStore("shop", () => {
       subtotal,
       deliveryFee,
       voucherDiscount: voucherDiscount.value,
+      voucherCode: voucherCode.value || undefined,
       total: Math.max(0, subtotal + deliveryFee - voucherDiscount.value),
       items: cartProducts.value.map(({ product, quantity }) => ({
         productId: product.id,
@@ -138,6 +150,7 @@ export const useShopStore = defineStore("shop", () => {
         price: product.price,
         quantity,
         seller: product.seller,
+        ...(cart.value.find((line) => line.productId === product.id)?.flashSaleId ? { flashSaleId: cart.value.find((line) => line.productId === product.id)?.flashSaleId } : {}),
       })),
     };
     saveOrder(order);
@@ -153,6 +166,7 @@ export const useShopStore = defineStore("shop", () => {
     checkoutAddress,
     deliveryMethod,
     voucherDiscount,
+    voucherCode,
     cartCount,
     cartTotal,
     savedProducts,
@@ -163,6 +177,7 @@ export const useShopStore = defineStore("shop", () => {
     login,
     logout,
     saveOrder,
+    updateOrder,
     createOrder,
   };
 });

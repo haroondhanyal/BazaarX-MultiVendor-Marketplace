@@ -26,6 +26,9 @@ The experience follows the approved BazaarX direction: white surfaces, orange ac
 - **Phase 3 — seller operations MVP:** seller identity/onboarding, dashboard, products, add/edit product, inventory, orders/fulfilment, returns, promotions, finance/payouts, analytics, store settings, and messages.
 - **Phase 4 — admin operations MVP:** dashboard, users/sellers, seller approval, product moderation, order/payment/shipment management, returns/refunds, marketing, fraud/risk, support, analytics, audit logs, and settings.
 - **Phase 5 — buyer service and purchase MVP:** checkout, address/delivery choices, voucher, payment selection/card demo, order confirmation/details/history/tracking, return/refund request, notifications, support center, and buyer–seller chat.
+- **Phase 6 — delivery and after-sales:** shipment creation, courier scans, buyer tracking timeline, return request evidence, seller/admin review steps, and refund records.
+- **Phase 7 — marketplace offers:** server-validated voucher rules, flash-sale stock and prices, campaign submissions, and admin activation controls.
+- **Phase 8 — seller finance and analytics:** category commission rules, seller net proceeds, weekly settlement batches, seller performance reports, and marketplace totals.
 
 ## Run locally
 
@@ -39,7 +42,9 @@ npm run dev:admin    # admin portal at http://localhost:5175
 npm run dev:api      # API at http://localhost:3001/api/v1
 ```
 
-The buyer app uses browser local storage for its demo flow by default. Set `VITE_API_URL=http://localhost:3001/api/v1` in the web app environment to use the mock API for checkout and payments. API catalog records and browser demo products are seeded separately for this phase. API orders, payments, and inventory are held in memory; seller/admin operational records and buyer support interactions use local browser storage, so demo data resets with browser storage or an API restart. The SQL migration is provided, but a database-backed repository and real payment, shipping, and identity providers are future work.
+Copy `.env.example` to `.env` at the repository root to connect all three portals to the API. The Phase 6–8 API is a process-memory mock for this delivery: orders, shipments, returns, vouchers, campaigns, flash sales, and settlement records reset when the API restarts. The Prisma schema and migration describe the database shape, but these mock endpoints do not persist to PostgreSQL yet.
+
+The buyer app uses browser local storage for its demo flow by default. With the root `.env` configured, checkout and fulfilment-related buyer, seller, and admin screens use the shared mock API. API catalog records and browser demo products are seeded separately. Seller/admin functions outside the Phase 6–8 endpoints and buyer support interactions retain browser-local demo storage. Real payment, shipping, identity providers, and database-backed repositories are future work.
 
 Demo checkout voucher: `BAZAARX10` (10% off, PKR 10,000 minimum subtotal, up to PKR 5,000 discount).
 

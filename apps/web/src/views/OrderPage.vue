@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import {
   Check,
@@ -15,11 +15,24 @@ import { useShopStore } from "../stores/shop";
 import SiteHeader from "../components/SiteHeader.vue";
 import SiteFooter from "../components/SiteFooter.vue";
 import StatusView from "../components/StatusView.vue";
+import { orderApi } from "../services/orders";
 const shop = useShopStore();
 const route = useRoute();
+const loadError = ref("");
+const loading = ref(false);
 const order = computed(() =>
   shop.orders.find((item) => item.id === route.params.orderId),
 );
+onMounted(async () => {
+  if (!orderApi.enabled) return;
+  loading.value = true;
+  try {
+    const remote = await orderApi.get(String(route.params.orderId));
+    if (remote) shop.updateOrder(remote);
+  } catch (cause) {
+    loadError.value = cause instanceof Error ? cause.message : "Order details could not be refreshed.";
+  } finally { loading.value = false; }
+});
 function money(value: number) {
   return new Intl.NumberFormat("en-PK").format(value);
 }
@@ -68,6 +81,8 @@ const activeStep = computed(() =>
             order.status.replaceAll("_", " ")
           }}</span>
         </div>
+        <p v-if="loading" class="order-refresh-note" role="status">Refreshing order and shipment updates…</p>
+        <p v-if="loadError" class="form-alert" role="alert">{{ loadError }}</p>
         <div class="tracking-steps">
           <div
             v-for="(step, index) in steps"

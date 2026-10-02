@@ -14,8 +14,10 @@ export interface SellerOrder {
   customer: string;
   product: string;
   amount: number;
-  status: "Processing" | "Pending" | "Shipped" | "Delivered";
+  status: "Processing" | "Pending" | "Packed" | "Shipped" | "Delivered";
   date: string;
+  shipmentId?: string;
+  trackingNumber?: string;
 }
 function read<T>(key: string, fallback: T): T {
   try {

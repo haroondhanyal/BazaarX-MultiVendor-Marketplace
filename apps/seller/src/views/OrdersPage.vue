@@ -1,9 +1,27 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { sellerData, formatPKR } from "../data";
 import { Search } from "lucide-vue-next";
+import { marketplaceApi } from "../services/marketplace";
 const term = ref("");
 const status = ref("All");
+const loading = ref(false);
+const error = ref("");
+onMounted(async () => {
+  if (!marketplaceApi.enabled) return;
+  loading.value = true;
+  try {
+    const response = await marketplaceApi.orders();
+    const rows = response.data.flatMap((order) => {
+      const items = order.items.filter((item) => item.seller.toLowerCase() === "techstore official");
+      if (!items.length) return [];
+      const state = order.status === "DELIVERED" ? "Delivered" : order.status === "SHIPPED" ? "Shipped" : order.status === "PACKED" ? "Packed" : order.status === "SELLER_PROCESSING" ? "Processing" : "Pending";
+      return [{ id: order.id, customer: "Marketplace customer", product: items.map((item) => `${item.name} × ${item.quantity}`).join(", "), amount: items.reduce((sum, item) => sum + item.price * item.quantity, 0), status: state as "Processing" | "Pending" | "Packed" | "Shipped" | "Delivered", date: new Date(order.createdAt).toLocaleDateString() }];
+    });
+    sellerData.orders = rows;
+  } catch (cause) { error.value = cause instanceof Error ? cause.message : "Orders could not be loaded."; }
+  finally { loading.value = false; }
+});
 const orders = computed(() =>
   sellerData.orders.filter(
     (o) =>
@@ -24,6 +42,8 @@ const orders = computed(() =>
       </div>
     </div>
     <div class="seller-panel">
+      <p v-if="loading" role="status" class="mock-note">Loading orders from the BazaarX API…</p>
+      <p v-if="error" role="alert" class="form-alert">{{ error }}</p>
       <div class="product-tools">
         <label
           ><Search /><input

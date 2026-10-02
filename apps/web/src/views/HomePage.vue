@@ -48,7 +48,7 @@ const countdown = ref("08 : 42 : 16");
           <div class="hero-actions">
             <RouterLink to="/search" class="button button-primary"
               >Explore the marketplace <ArrowRight :size="17" /></RouterLink
-            ><RouterLink to="/search?q=flash+sale" class="button button-quiet"
+            ><RouterLink to="/flash-sales" class="button button-quiet"
               >See today's deals</RouterLink
             >
           </div>
@@ -139,7 +139,7 @@ const countdown = ref("08 : 42 : 16");
               >Fresh deals <b>{{ countdown }}</b></span
             >
           </div>
-          <RouterLink to="/search?q=deals" class="text-link"
+          <RouterLink to="/flash-sales" class="text-link"
             >View all <ArrowRight :size="16"
           /></RouterLink>
         </div>

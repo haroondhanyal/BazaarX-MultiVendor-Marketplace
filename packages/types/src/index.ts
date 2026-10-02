@@ -32,6 +32,8 @@ export interface Product {
 export interface CartLine {
   productId: string;
   quantity: number;
+  flashSaleId?: string;
+  promoPrice?: number;
 }
 
 export type OrderStatus =
@@ -53,6 +55,7 @@ export interface MarketplaceOrder {
   subtotal: number;
   deliveryFee: number;
   voucherDiscount?: number;
+  voucherCode?: string;
   total: number;
   items: Array<{
     productId: string;

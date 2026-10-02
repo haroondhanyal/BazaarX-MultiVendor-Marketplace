@@ -7,6 +7,7 @@ import SiteHeader from "../components/SiteHeader.vue";
 import SiteFooter from "../components/SiteFooter.vue";
 import StatusView from "../components/StatusView.vue";
 import { orderApi } from "../services/orders";
+import { commerceApi } from "../services/commerce";
 
 const shop = useShopStore();
 const router = useRouter();
@@ -16,7 +17,7 @@ const savedAddresses = ref<string[]>(
 const address = ref(shop.checkoutAddress || savedAddresses.value[0] || "");
 const error = ref("");
 const placing = ref(false);
-const voucherCode = ref("");
+const voucherCode = ref(shop.voucherCode);
 const voucherMessage = ref("");
 const deliveryFee = computed(() =>
   shop.deliveryMethod === "express" ? 800 : shop.cartTotal >= 25000 ? 0 : 350,
@@ -24,10 +25,28 @@ const deliveryFee = computed(() =>
 const total = computed(() =>
   Math.max(0, shop.cartTotal + deliveryFee.value - shop.voucherDiscount),
 );
-function applyVoucher() {
+async function applyVoucher() {
   voucherMessage.value = "";
+  if (commerceApi.enabled) {
+    try {
+      const result = await commerceApi.validateVoucher({
+        code: voucherCode.value,
+        subtotal: shop.cartTotal,
+        productIds: shop.cartProducts.map((line) => line.product.id),
+      });
+      shop.voucherDiscount = result.discount;
+      shop.voucherCode = result.code;
+      voucherMessage.value = `${result.title} applied — PKR ${money(result.discount)} off.`;
+    } catch (cause) {
+      shop.voucherDiscount = 0;
+      shop.voucherCode = "";
+      voucherMessage.value = cause instanceof Error ? cause.message : "That voucher code is not valid.";
+    }
+    return;
+  }
   if (voucherCode.value.trim().toUpperCase() !== "BAZAARX10") {
     shop.voucherDiscount = 0;
+    shop.voucherCode = "";
     voucherMessage.value = "That voucher code is not valid.";
     return;
   }
@@ -37,6 +56,7 @@ function applyVoucher() {
     return;
   }
   shop.voucherDiscount = Math.min(Math.round(shop.cartTotal * 0.1), 5000);
+  shop.voucherCode = "BAZAARX10";
   voucherMessage.value = `Voucher applied — PKR ${money(shop.voucherDiscount)} off.`;
 }
 function money(value: number) {
@@ -58,14 +78,15 @@ async function placeOrder() {
     let order;
     if (orderApi.enabled) {
       order = await orderApi.checkout({
-        items: shop.cartProducts.map(({ product, quantity }) => ({
+        items: shop.cartProducts.map(({ product, quantity, flashSaleId }) => ({
           productId: product.id,
           quantity,
+          flashSaleId,
         })),
         address: shop.checkoutAddress,
         paymentMethod: shop.selectedPayment,
         deliveryMethod: shop.deliveryMethod,
-        voucherCode: shop.voucherDiscount ? voucherCode.value.trim() : undefined,
+        voucherCode: shop.voucherDiscount ? shop.voucherCode : undefined,
       });
       if (shop.selectedPayment !== "cod") {
         const payment = await orderApi.createPayment(order.id, shop.selectedPayment);

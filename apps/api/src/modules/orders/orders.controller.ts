@@ -19,12 +19,15 @@ import {
   Param,
   Post,
   BadRequestException,
+  Patch,
 } from "@nestjs/common";
 import { catalog } from "../catalog/catalog.controller";
+import { activeFlashPrice, calculateVoucher, vouchers } from "../promotions/promotion-data";
 
 class CheckoutItemDto {
   @IsString() productId!: string;
   @IsInt() @Min(1) quantity!: number;
+  @IsOptional() @IsString() flashSaleId?: string;
 }
 class CheckoutDto {
   @IsArray()
@@ -37,6 +40,9 @@ class CheckoutDto {
   paymentMethod!: string;
   @IsIn(["standard", "express"]) deliveryMethod!: string;
   @IsOptional() @IsString() voucherCode?: string;
+}
+class OrderStatusDto {
+  @IsIn(["SELLER_PROCESSING", "CANCELLED"]) status!: string;
 }
 
 interface OrderRecord {
@@ -57,12 +63,16 @@ interface OrderRecord {
     price: number;
     quantity: number;
     seller: string;
+    flashSaleId?: string;
   }>;
 }
 const orders = new Map<string, OrderRecord>();
 const checkoutKeys = new Map<string, OrderRecord>();
 export function findMockOrder(id: string) {
   return orders.get(id);
+}
+export function listMockOrders() {
+  return [...orders.values()];
 }
 
 @Controller("orders")
@@ -79,21 +89,23 @@ export class OrdersController {
         throw new BadRequestException(`Unknown product: ${line.productId}`);
       if (line.quantity > product.stock)
         throw new BadRequestException(`Insufficient stock for ${product.name}`);
-      return { product, quantity: line.quantity };
+      const flash = line.flashSaleId ? activeFlashPrice(line.flashSaleId, product.id, line.quantity) : undefined;
+      if (line.flashSaleId && !flash) throw new BadRequestException("The flash sale price is no longer available for this quantity.");
+      return { product, quantity: line.quantity, flash };
     });
     const subtotal = lines.reduce(
-      (sum, line) => sum + line.product.price * line.quantity,
+      (sum, line) => sum + (line.flash?.price ?? line.product.price) * line.quantity,
       0,
     );
     const deliveryFee =
       body.deliveryMethod === "express" ? 800 : subtotal >= 25000 ? 0 : 350;
     let voucherDiscount = 0;
+    let voucherCodeUsed: string | undefined;
     if (body.voucherCode) {
-      if (body.voucherCode.trim().toUpperCase() !== "BAZAARX10")
-        throw new BadRequestException("Voucher is not valid");
-      if (subtotal < 10000)
-        throw new BadRequestException("Voucher requires a PKR 10,000 minimum subtotal");
-      voucherDiscount = Math.min(Math.round(subtotal * 0.1), 5000);
+      const result = calculateVoucher(body.voucherCode, subtotal, lines.map((line) => line.product.category));
+      if ("error" in result) throw new BadRequestException(result.error);
+      voucherCodeUsed = result.voucher.code;
+      voucherDiscount = result.discount;
     }
     const order: OrderRecord = {
       id: `BX-${Date.now().toString().slice(-8)}`,
@@ -106,16 +118,24 @@ export class OrdersController {
       deliveryFee,
       voucherDiscount,
       total: subtotal + deliveryFee - voucherDiscount,
-      items: lines.map(({ product, quantity }) => ({
+      items: lines.map(({ product, quantity, flash }) => ({
         productId: product.id,
         name: product.name,
         image: product.image,
-        price: product.price,
+        price: flash?.price ?? product.price,
         quantity,
         seller: product.seller,
+        ...(flash ? { flashSaleId: flash.sale.id } : {}),
       })),
     };
-    for (const line of lines) line.product.stock -= line.quantity;
+    for (const line of lines) {
+      line.product.stock -= line.quantity;
+      if (line.flash) line.flash.item.sold += line.quantity;
+    }
+    if (voucherCodeUsed) {
+      const voucher = vouchers.get(voucherCodeUsed);
+      if (voucher) voucher.used += 1;
+    }
     orders.set(order.id, order);
     if (key) checkoutKeys.set(key, order);
     return order;
@@ -130,6 +150,17 @@ export class OrdersController {
   get(@Param("id") id: string) {
     const order = orders.get(id);
     if (!order) throw new NotFoundException("Order not found");
+    return order;
+  }
+
+  @Patch(":id/status")
+  updateStatus(@Param("id") id: string, @Body() body: OrderStatusDto) {
+    const order = orders.get(id);
+    if (!order) throw new NotFoundException("Order not found");
+    if (order.status === "DELIVERED" || order.status === "CANCELLED") throw new BadRequestException("This order can no longer be changed.");
+    if (body.status === "CANCELLED" && order.status !== "PLACED" && order.status !== "PAYMENT_PENDING") throw new BadRequestException("Only an unprocessed order can be cancelled.");
+    if (body.status === "SELLER_PROCESSING" && order.status !== "PLACED") throw new BadRequestException("The seller can only accept a placed order.");
+    order.status = body.status;
     return order;
   }
 }

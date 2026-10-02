@@ -2,7 +2,18 @@ import "reflect-metadata";
 import { ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { AppModule } from "./modules/app.module";
+
+// Read the shared workspace .env file without adding a runtime dependency.
+try {
+  const envFile = readFileSync(resolve(process.cwd(), "../../.env"), "utf8");
+  for (const line of envFile.split(/\r?\n/)) {
+    const match = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
+    if (match && !process.env[match[1]]) process.env[match[1]] = match[2].replace(/^['"]|['"]$/g, "");
+  }
+} catch { /* Environment variables may be provided by the host instead. */ }
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

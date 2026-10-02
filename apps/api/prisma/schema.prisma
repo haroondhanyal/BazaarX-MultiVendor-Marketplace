@@ -218,23 +218,27 @@ model Order {
   items           OrderItem[]
   payments        Payment[]
   statusHistory   OrderStatusHistory[]
+  shipment        Shipment?
+  returnRequests  ReturnRequest[]
+  voucherUsages   VoucherUsage[]
 
   @@index([userId, createdAt])
   @@index([status, createdAt])
 }
 
 model OrderItem {
-  id        String          @id @default(cuid())
-  orderId   String
-  productId String
-  variantId String?
-  sellerId  String?
-  name      String
-  unitPrice Int
-  quantity  Int
-  order     Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product   Product         @relation(fields: [productId], references: [id])
-  variant   ProductVariant? @relation(fields: [variantId], references: [id])
+  id          String          @id @default(cuid())
+  orderId     String
+  productId   String
+  variantId   String?
+  sellerId    String?
+  name        String
+  unitPrice   Int
+  quantity    Int
+  order       Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product         @relation(fields: [productId], references: [id])
+  variant     ProductVariant? @relation(fields: [variantId], references: [id])
+  returnItems ReturnItem[]
 
   @@index([sellerId, orderId])
 }
@@ -263,4 +267,275 @@ model Payment {
   order          Order    @relation(fields: [orderId], references: [id])
 
   @@index([orderId, status])
+}
+
+model Courier {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  active    Boolean    @default(true)
+  shipments Shipment[]
+}
+
+model Shipment {
+  id                String            @id @default(cuid())
+  orderId           String            @unique
+  courierId         String?
+  trackingNumber    String            @unique
+  status            String            @default("PACKED")
+  estimatedDelivery DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  order             Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  courier           Courier?          @relation(fields: [courierId], references: [id])
+  events            ShipmentEvent[]
+  attempts          DeliveryAttempt[]
+}
+
+model ShipmentEvent {
+  id         String   @id @default(cuid())
+  shipmentId String
+  status     String
+  location   String
+  notes      String?
+  createdAt  DateTime @default(now())
+  shipment   Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+
+  @@index([shipmentId, createdAt])
+}
+
+model DeliveryAttempt {
+  id          String   @id @default(cuid())
+  shipmentId  String
+  attemptedAt DateTime @default(now())
+  outcome     String
+  notes       String?
+  shipment    Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+
+  @@index([shipmentId, attemptedAt])
+}
+
+model ReturnRequest {
+  id           String           @id @default(cuid())
+  orderId      String
+  reason       String
+  description  String           @default("")
+  refundMethod String
+  refundAmount Int
+  status       String           @default("REQUESTED")
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  order        Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  items        ReturnItem[]
+  evidence     ReturnEvidence[]
+  refunds      Refund[]
+  events       ReturnEvent[]
+
+  @@index([orderId, status])
+}
+
+model ReturnItem {
+  id              String        @id @default(cuid())
+  returnRequestId String
+  orderItemId     String?
+  productId       String
+  quantity        Int
+  amount          Int
+  returnRequest   ReturnRequest @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
+  orderItem       OrderItem?    @relation(fields: [orderItemId], references: [id])
+
+  @@index([returnRequestId])
+}
+
+model ReturnEvidence {
+  id              String        @id @default(cuid())
+  returnRequestId String
+  fileUrl         String
+  createdAt       DateTime      @default(now())
+  returnRequest   ReturnRequest @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
+}
+
+model ReturnEvent {
+  id              String        @id @default(cuid())
+  returnRequestId String
+  status          String
+  note            String?
+  createdAt       DateTime      @default(now())
+  returnRequest   ReturnRequest @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
+
+  @@index([returnRequestId, createdAt])
+}
+
+model Refund {
+  id              String        @id @default(cuid())
+  returnRequestId String
+  amount          Int
+  method          String
+  status          String        @default("PENDING")
+  providerRef     String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  returnRequest   ReturnRequest @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+}
+
+model Voucher {
+  id         String         @id @default(cuid())
+  code       String         @unique
+  title      String
+  type       String
+  status     String         @default("ACTIVE")
+  startsAt   DateTime
+  endsAt     DateTime
+  usageLimit Int
+  used       Int            @default(0)
+  rules      VoucherRule[]
+  usages     VoucherUsage[]
+
+  @@index([status, startsAt, endsAt])
+}
+
+model VoucherRule {
+  id        String  @id @default(cuid())
+  voucherId String
+  kind      String
+  value     String
+  voucher   Voucher @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+
+  @@index([voucherId, kind])
+}
+
+model VoucherUsage {
+  id        String   @id @default(cuid())
+  voucherId String
+  orderId   String
+  userId    String
+  discount  Int
+  createdAt DateTime @default(now())
+  voucher   Voucher  @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([voucherId, userId, orderId])
+  @@index([voucherId, createdAt])
+}
+
+model Campaign {
+  id          String            @id @default(cuid())
+  name        String
+  description String            @default("")
+  status      String            @default("PENDING_APPROVAL")
+  startsAt    DateTime
+  endsAt      DateTime
+  createdAt   DateTime          @default(now())
+  sellers     CampaignSeller[]
+  products    CampaignProduct[]
+
+  @@index([status, startsAt, endsAt])
+}
+
+model CampaignSeller {
+  id         String   @id @default(cuid())
+  campaignId String
+  sellerId   String
+  status     String   @default("PENDING")
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, sellerId])
+}
+
+model CampaignProduct {
+  id         String   @id @default(cuid())
+  campaignId String
+  productId  String
+  status     String   @default("PENDING")
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, productId])
+}
+
+model FlashSale {
+  id        String             @id @default(cuid())
+  name      String
+  status    String             @default("SCHEDULED")
+  startsAt  DateTime
+  endsAt    DateTime
+  createdAt DateTime           @default(now())
+  products  FlashSaleProduct[]
+
+  @@index([status, startsAt, endsAt])
+}
+
+model FlashSaleProduct {
+  id             String    @id @default(cuid())
+  flashSaleId    String
+  productId      String
+  normalPrice    Int
+  flashPrice     Int
+  allocatedStock Int
+  sold           Int       @default(0)
+  perUserLimit   Int       @default(1)
+  flashSale      FlashSale @relation(fields: [flashSaleId], references: [id], onDelete: Cascade)
+
+  @@unique([flashSaleId, productId])
+  @@index([productId])
+}
+
+model CommissionRule {
+  id         String    @id @default(cuid())
+  category   String    @unique
+  percentage Int
+  active     Boolean   @default(true)
+  startsAt   DateTime  @default(now())
+  endsAt     DateTime?
+}
+
+model SellerLedger {
+  id              String           @id @default(cuid())
+  sellerId        String
+  orderId         String
+  orderItemId     String?
+  kind            String
+  amount          Int
+  note            String?
+  createdAt       DateTime         @default(now())
+  settlementItems SettlementItem[]
+
+  @@index([sellerId, createdAt])
+  @@index([orderId])
+}
+
+model SellerSettlement {
+  id          String           @id @default(cuid())
+  sellerId    String
+  periodStart DateTime
+  periodEnd   DateTime
+  status      String           @default("ELIGIBLE")
+  totalAmount Int
+  createdAt   DateTime         @default(now())
+  settledAt   DateTime?
+  items       SettlementItem[]
+
+  @@index([sellerId, status, createdAt])
+}
+
+model SettlementItem {
+  id           String           @id @default(cuid())
+  settlementId String
+  ledgerId     String
+  amount       Int
+  settlement   SellerSettlement @relation(fields: [settlementId], references: [id], onDelete: Cascade)
+  ledger       SellerLedger     @relation(fields: [ledgerId], references: [id])
+
+  @@unique([settlementId, ledgerId])
+}
+
+model MarketplaceFee {
+  id        String   @id @default(cuid())
+  sellerId  String
+  orderId   String?
+  kind      String
+  amount    Int
+  createdAt DateTime @default(now())
+
+  @@index([sellerId, createdAt])
 }
