@@ -31,9 +31,22 @@ export const marketplaceApi = {
   createCampaign(input: Pick<Campaign, "name" | "description" | "startsAt" | "endsAt">) { return request<Campaign>("/promotions/campaigns", { method: "POST", body: JSON.stringify(input) }); },
   conversations() { return request<{data:SellerConversation[]}>('/conversations?participant=TechStore%20Official'); },
   sendMessage(id: string, text: string) { return request<SellerMessage>(`/conversations/${encodeURIComponent(id)}/messages`, {method:'POST',body:JSON.stringify({text,sender:'seller'})}); },
+  markConversationRead(id: string) { return request<{success:boolean}>(`/conversations/${encodeURIComponent(id)}/read?participant=seller`,{method:"PATCH"}); },
   generateListing(input: {title:string;category:string;specifications?:string}) { return request<ListingCopy>('/ai/listing/generate',{method:'POST',body:JSON.stringify(input)}); },
   listingQuality(input: {title:string;category:string;description?:string;images?:string[];specifications?:string}) { return request<{score:number;suggestions:string[]}>('/ai/listing/quality',{method:'POST',body:JSON.stringify(input)}); },
 };
+export async function uploadProductImage(file: File) {
+  if (!base) throw new Error("VITE_API_URL is not configured.");
+  const form = new FormData(); form.set("image", file);
+  const response = await fetch(`${base}/uploads/image`, {method:"POST",body:form});
+  const result = await response.json() as {url?:string;message?:string|string[]};
+  if (!response.ok || !result.url) throw new Error(Array.isArray(result.message)?result.message.join(", "):result.message||"Image upload failed.");
+  return result.url;
+}
+export function connectSellerChat() {
+  if (!base) return null;
+  return io(`${new URL(base).origin}/chat`, { transports: ["websocket", "polling"] });
+}
 
 export interface Shipment { id: string; orderId: string; trackingNumber: string; courier: string; status: string; estimatedDelivery: string; events: Array<{ status: string; location: string; time: string; notes: string }> }
 export interface SellerReturn { id: string; orderId: string; itemName: string; reason: string; description: string; refundAmount: number; status: string; createdAt: string; events: Array<{status:string;time:string;note:string}>; seller: string }
@@ -44,3 +57,4 @@ export interface Campaign { id: string; name: string; description: string; statu
 export interface SellerMessage { id:string;sender:string;text:string;sentAt:string;read:boolean }
 export interface SellerConversation { id:string;buyer:string;seller:string;lastMessage:string;updatedAt:string;online:boolean;typing:string|null;messages:SellerMessage[] }
 export interface ListingCopy { provider:string;seoTitle:string;shortDescription:string;description:string;bullets:string[];keywords:string[] }
+import { io } from "socket.io-client";

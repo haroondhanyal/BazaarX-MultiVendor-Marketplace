@@ -11,6 +11,8 @@ import { PromotionsController } from "./promotions/promotions.controller";
 import { AnalyticsController, FinanceController } from "./finance/finance.controller";
 import { ConversationsController, NotificationsController, SupportController } from "./communication/communication.controller";
 import { AiController } from "./ai/ai.controller";
+import { CommunicationGateway } from "./communication/communication.gateway";
+import { UploadsController } from "./uploads/uploads.controller";
 
 @Module({
   controllers: [
@@ -29,6 +31,8 @@ import { AiController } from "./ai/ai.controller";
     NotificationsController,
     SupportController,
     AiController,
+    UploadsController,
   ],
+  providers: [CommunicationGateway],
 })
 export class AppModule {}

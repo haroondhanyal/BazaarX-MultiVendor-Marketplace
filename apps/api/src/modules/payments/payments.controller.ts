@@ -1,3 +1,4 @@
+import { PersistentMap } from "../../common/persistent-map";
 import { IsIn, IsString } from "class-validator";
 import {
   Body,
@@ -7,7 +8,7 @@ import {
   Param,
   Post,
 } from "@nestjs/common";
-import { findMockOrder } from "../orders/orders.controller";
+import { findMockOrder, persistMockOrder } from "../orders/orders.controller";
 
 class PaymentDto {
   @IsString() orderId!: string;
@@ -21,8 +22,8 @@ interface PaymentRecord {
   status: "PENDING" | "AUTHORIZED" | "FAILED";
   amount: number;
 }
-const payments = new Map<string, PaymentRecord>();
-const paymentKeys = new Map<string, PaymentRecord>();
+const payments = new PersistentMap<string, PaymentRecord>("payments");
+const paymentKeys = new PersistentMap<string, PaymentRecord>("payment-keys");
 
 @Controller("payments")
 export class PaymentsController {
@@ -39,7 +40,7 @@ export class PaymentsController {
       amount: order.total,
     };
     payments.set(record.id, record);
-    if (record.status === "AUTHORIZED") order.status = "PLACED";
+    if (record.status === "AUTHORIZED") { order.status = "PLACED"; persistMockOrder(order); }
     if (key) paymentKeys.set(key, record);
     return record;
   }
@@ -50,8 +51,10 @@ export class PaymentsController {
     if (!payment) throw new NotFoundException("Payment not found");
     if (key && paymentKeys.has(key)) return paymentKeys.get(key);
     payment.status = "AUTHORIZED";
+    payments.set(payment.id, payment);
+    for (const [key, saved] of paymentKeys) if (saved.id === payment.id) paymentKeys.set(key,payment);
     const order = findMockOrder(payment.orderId);
-    if (order) order.status = "PLACED";
+    if (order) { order.status = "PLACED"; persistMockOrder(order); }
     if (key) paymentKeys.set(key, payment);
     return payment;
   }

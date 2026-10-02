@@ -6,3 +6,5 @@ dist
 coverage
 *.tsbuildinfo
 .DS_Store
+/apps/api/var/
+/apps/api/uploads/

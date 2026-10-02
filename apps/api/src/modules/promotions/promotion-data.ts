@@ -1,3 +1,4 @@
+import { PersistentMap } from "../../common/persistent-map";
 export interface VoucherRecord {
   code: string;
   title: string;
@@ -35,19 +36,19 @@ export interface CampaignRecord {
 
 const day = 86_400_000;
 const today = Date.now();
-export const vouchers = new Map<string, VoucherRecord>([
+export const vouchers = new PersistentMap<string, VoucherRecord>("vouchers", [
   ["BAZAARX10", { code: "BAZAARX10", title: "BazaarX 10% off", type: "PLATFORM", percentOff: 10, minimumSpend: 10_000, maxDiscount: 5_000, status: "ACTIVE", startsAt: new Date(today - day).toISOString(), endsAt: new Date(today + 90 * day).toISOString(), usageLimit: 20_000, used: 0 }],
   ["TECHWEEK", { code: "TECHWEEK", title: "Technology week", type: "CATEGORY", percentOff: 15, minimumSpend: 25_000, maxDiscount: 10_000, category: "Electronics", status: "ACTIVE", startsAt: new Date(today - day).toISOString(), endsAt: new Date(today + 30 * day).toISOString(), usageLimit: 2_000, used: 0 }],
 ]);
 
-export const flashSales = new Map<string, FlashSaleRecord>([
+export const flashSales = new PersistentMap<string, FlashSaleRecord>("flashSales", [
   ["flash-tech-week", { id: "flash-tech-week", name: "Technology Week Flash Sale", startsAt: new Date(today - day).toISOString(), endsAt: new Date(today + 7 * day).toISOString(), status: "ACTIVE", items: [
     { productId: "p1", normalPrice: 189_999, flashPrice: 174_999, allocatedStock: 8, sold: 0, perUserLimit: 1 },
     { productId: "p2", normalPrice: 12_499, flashPrice: 9_999, allocatedStock: 16, sold: 0, perUserLimit: 2 },
   ] }],
 ]);
 
-export const campaigns = new Map<string, CampaignRecord>([
+export const campaigns = new PersistentMap<string, CampaignRecord>("campaigns", [
   ["campaign-october-edit", { id: "campaign-october-edit", name: "October Bazaar Edit", description: "Fresh seasonal picks from trusted BazaarX stores.", startsAt: new Date(today - day).toISOString(), endsAt: new Date(today + 14 * day).toISOString(), status: "ACTIVE", sellerNames: ["TechStore Official", "AudioHub"] }],
 ]);
 

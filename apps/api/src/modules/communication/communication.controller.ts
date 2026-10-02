@@ -1,5 +1,8 @@
+import { PersistentMap } from "../../common/persistent-map";
 import { Body, Controller, Get, NotFoundException, Param, Patch, Post, Query } from "@nestjs/common";
 import { IsIn, IsOptional, IsString, MaxLength, MinLength } from "class-validator";
+import { CommunicationGateway } from "./communication.gateway";
+import { deliverExternalNotifications } from "./notification-channels";
 
 type Participant = "buyer" | "seller" | "admin";
 interface MessageRecord { id: string; sender: Participant; text: string; sentAt: string; read: boolean; attachmentUrl?: string; productId?: string; orderId?: string }
@@ -9,12 +12,13 @@ interface TicketComment { id: string; author: string; message: string; createdAt
 interface TicketRecord { id: string; userId: string; category: string; subject: string; message: string; status: string; createdAt: string; comments: TicketComment[] }
 
 const now = new Date().toISOString();
-const conversations = new Map<string, ConversationRecord>([["CONV-TECH", { id: "CONV-TECH", buyer: "customer", seller: "TechStore Official", lastMessage: "Thanks for reaching out. How can we help?", updatedAt: now, online: true, typing: null, messages: [{ id: "MSG-1", sender: "buyer", text: "Hi, is this item available?", sentAt: now, read: true }, { id: "MSG-2", sender: "seller", text: "Thanks for reaching out. How can we help?", sentAt: now, read: false }] }]]);
-const notifications = new Map<string, NoticeRecord>([["N-1", { id: "N-1", userId: "customer", type: "order", title: "Welcome to BazaarX", message: "Your account is ready. Find something you love from trusted local stores.", createdAt: now }], ["N-2", { id: "N-2", userId: "customer", type: "voucher", title: "New marketplace offers", message: "Check the latest discounts and flash sales.", createdAt: now }]]);
-const tickets = new Map<string, TicketRecord>();
+const conversations = new PersistentMap<string, ConversationRecord>("conversations", [["CONV-TECH", { id: "CONV-TECH", buyer: "customer", seller: "TechStore Official", lastMessage: "Thanks for reaching out. How can we help?", updatedAt: now, online: true, typing: null, messages: [{ id: "MSG-1", sender: "buyer", text: "Hi, is this item available?", sentAt: now, read: true }, { id: "MSG-2", sender: "seller", text: "Thanks for reaching out. How can we help?", sentAt: now, read: false }] }]]);
+const notifications = new PersistentMap<string, NoticeRecord>("notifications", [["N-1", { id: "N-1", userId: "customer", type: "order", title: "Welcome to BazaarX", message: "Your account is ready. Find something you love from trusted local stores.", createdAt: now }], ["N-2", { id: "N-2", userId: "customer", type: "voucher", title: "New marketplace offers", message: "Check the latest discounts and flash sales.", createdAt: now }]]);
+const tickets = new PersistentMap<string, TicketRecord>("tickets");
 export function pushNotification(userId: string, type: string, title: string, message: string, link?: string) {
   const notice: NoticeRecord = { id: `N-${Date.now()}-${notifications.size}`, userId, type, title, message, createdAt: new Date().toISOString(), link };
   notifications.set(notice.id, notice);
+  deliverExternalNotifications(notice);
   return notice;
 }
 
@@ -27,25 +31,27 @@ class TicketStatusDto { @IsIn(["ASSIGNED", "IN_PROGRESS", "WAITING_CUSTOMER", "R
 
 @Controller("conversations")
 export class ConversationsController {
+  constructor(private readonly gateway: CommunicationGateway) {}
+
   @Get() list(@Query("participant") participant = "buyer") { return { data: [...conversations.values()].filter((item) => participant === "buyer" || participant === "admin" || item.seller.toLowerCase() === participant.toLowerCase()) }; }
   @Post() start(@Body() body: StartConversationDto) { const existing = [...conversations.values()].find((item) => item.buyer === body.buyer && item.seller === body.seller); if (existing) return existing; const item: ConversationRecord = { id: `CONV-${Date.now()}`, buyer: body.buyer, seller: body.seller, lastMessage: "Start a conversation", updatedAt: new Date().toISOString(), online: true, typing: null, messages: [] }; conversations.set(item.id, item); return item; }
   @Get(":id/messages") messages(@Param("id") id: string) { const item = conversations.get(id); if (!item) throw new NotFoundException("Conversation not found"); return { data: item.messages }; }
-  @Post(":id/messages") send(@Param("id") id: string, @Body() body: MessageDto) { const item = conversations.get(id); if (!item) throw new NotFoundException("Conversation not found"); const sender = body.sender ?? "buyer"; const message: MessageRecord = { id: `MSG-${Date.now()}`, sender, text: body.text.trim(), sentAt: new Date().toISOString(), read: false, attachmentUrl: body.attachmentUrl, productId: body.productId, orderId: body.orderId }; item.messages.push(message); item.lastMessage = message.text || "Attachment"; item.updatedAt = message.sentAt; item.typing = null; if (sender === "seller") pushNotification("customer", "chat", `New message from ${item.seller}`, message.text, `/chat/${encodeURIComponent(item.seller)}`); return message; }
-  @Patch(":id/read") markRead(@Param("id") id: string, @Query("participant") participant = "buyer") { const item = conversations.get(id); if (!item) throw new NotFoundException("Conversation not found"); item.messages.forEach((message) => { if (message.sender !== participant) message.read = true; }); return { success: true }; }
-  @Patch(":id/typing") typing(@Param("id") id: string, @Body() body: TypingDto) { const item = conversations.get(id); if (!item) throw new NotFoundException("Conversation not found"); item.typing = body.typing ? body.participant ?? "buyer" : null; return { typing: item.typing }; }
+  @Post(":id/messages") send(@Param("id") id: string, @Body() body: MessageDto) { const item = conversations.get(id); if (!item) throw new NotFoundException("Conversation not found"); const sender = body.sender ?? "buyer"; const message: MessageRecord = { id: `MSG-${Date.now()}`, sender, text: body.text.trim(), sentAt: new Date().toISOString(), read: false, attachmentUrl: body.attachmentUrl, productId: body.productId, orderId: body.orderId }; item.messages.push(message); item.lastMessage = message.text || "Attachment"; item.updatedAt = message.sentAt; item.typing = null; conversations.set(id,item); this.gateway.message(id, message); if (sender === "seller") pushNotification("customer", "chat", `New message from ${item.seller}`, message.text, `/chat/${encodeURIComponent(item.seller)}`); return message; }
+  @Patch(":id/read") markRead(@Param("id") id: string, @Query("participant") participant = "buyer") { const item = conversations.get(id); if (!item) throw new NotFoundException("Conversation not found"); item.messages.forEach((message) => { if (message.sender !== participant) message.read = true; }); conversations.set(id,item); this.gateway.read(id, { participant, readAt: new Date().toISOString() }); return { success: true }; }
+  @Patch(":id/typing") typing(@Param("id") id: string, @Body() body: TypingDto) { const item = conversations.get(id); if (!item) throw new NotFoundException("Conversation not found"); item.typing = body.typing ? body.participant ?? "buyer" : null; conversations.set(id,item); const result = { participant: item.typing, typing: Boolean(item.typing) }; this.gateway.typing(id, result); return { typing: item.typing }; }
 }
 
 @Controller("notifications")
 export class NotificationsController {
   @Get() list(@Query("userId") userId = "customer") { const rows = [...notifications.values()].filter((item) => item.userId === userId).sort((a, b) => b.createdAt.localeCompare(a.createdAt)); return { data: rows, unread: rows.filter((item) => !item.readAt).length }; }
-  @Patch(":id/read") read(@Param("id") id: string) { const item = notifications.get(id); if (!item) throw new NotFoundException("Notification not found"); item.readAt = new Date().toISOString(); return item; }
-  @Patch("read-all") readAll(@Query("userId") userId = "customer") { for (const item of notifications.values()) if (item.userId === userId && !item.readAt) item.readAt = new Date().toISOString(); return { success: true }; }
+  @Patch(":id/read") read(@Param("id") id: string) { const item = notifications.get(id); if (!item) throw new NotFoundException("Notification not found"); item.readAt = new Date().toISOString(); notifications.set(id,item); return item; }
+  @Patch("read-all") readAll(@Query("userId") userId = "customer") { for (const item of notifications.values()) if (item.userId === userId && !item.readAt) { item.readAt = new Date().toISOString(); notifications.set(item.id,item); } return { success: true }; }
 }
 
 @Controller("support/tickets")
 export class SupportController {
   @Get() list(@Query("userId") userId?: string) { return { data: [...tickets.values()].filter((item) => !userId || item.userId === userId).sort((a, b) => b.createdAt.localeCompare(a.createdAt)) }; }
   @Post() create(@Body() body: TicketDto) { const item: TicketRecord = { id: `TKT-${Date.now()}`, userId: body.userId, category: body.category, subject: body.subject, message: body.message.trim(), status: "OPEN", createdAt: new Date().toISOString(), comments: [] }; tickets.set(item.id, item); pushNotification(body.userId,"support","Support request received",`Ticket ${item.id} is open: ${item.subject}`,"/support"); return item; }
-  @Post(":id/comments") comment(@Param("id") id: string, @Body() body: CommentDto) { const item = tickets.get(id); if (!item) throw new NotFoundException("Support ticket not found"); const comment = { id: `C-${Date.now()}`, author: body.author, message: body.message.trim(), createdAt: new Date().toISOString() }; item.comments.push(comment); if (item.status === "WAITING_CUSTOMER") item.status = "IN_PROGRESS"; return comment; }
-  @Patch(":id/status") status(@Param("id") id: string, @Body() body: TicketStatusDto) { const item = tickets.get(id); if (!item) throw new NotFoundException("Support ticket not found"); item.status = body.status; pushNotification(item.userId,"support","Support ticket updated",`${item.id} is now ${body.status.toLowerCase().replaceAll("_"," ")}.`,"/support"); return item; }
+  @Post(":id/comments") comment(@Param("id") id: string, @Body() body: CommentDto) { const item = tickets.get(id); if (!item) throw new NotFoundException("Support ticket not found"); const comment = { id: `C-${Date.now()}`, author: body.author, message: body.message.trim(), createdAt: new Date().toISOString() }; item.comments.push(comment); if (item.status === "WAITING_CUSTOMER") item.status = "IN_PROGRESS"; tickets.set(id,item); return comment; }
+  @Patch(":id/status") status(@Param("id") id: string, @Body() body: TicketStatusDto) { const item = tickets.get(id); if (!item) throw new NotFoundException("Support ticket not found"); item.status = body.status; tickets.set(id,item); pushNotification(item.userId,"support","Support ticket updated",`${item.id} is now ${body.status.toLowerCase().replaceAll("_"," ")}.`,"/support"); return item; }
 }

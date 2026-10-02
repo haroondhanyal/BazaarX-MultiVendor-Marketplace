@@ -3,7 +3,7 @@ import { computed, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { sellerData } from "../data";
 import { ArrowLeft, Save, Check } from "lucide-vue-next";
-import { marketplaceApi, type ListingCopy } from "../services/marketplace";
+import { marketplaceApi, uploadProductImage, type ListingCopy } from "../services/marketplace";
 const route = useRoute();
 const router = useRouter();
 const existing = computed(() =>
@@ -17,6 +17,8 @@ const stock = ref(existing.value?.stock ?? 0);
 const shortDescription = ref(existing.value?.shortDescription ?? "");
 const description = ref(existing.value?.description ?? "");
 const specifications = ref(existing.value?.specifications ?? "");
+const images = ref(existing.value?.images ?? []);
+const uploadingImage = ref(false);
 const error = ref("");
 const aiLoading = ref(false);
 const aiCopy = ref<ListingCopy | null>(null);
@@ -30,7 +32,8 @@ async function generateCopy() {
   finally { aiLoading.value = false; }
 }
 function applyCopy() { if (!aiCopy.value) return; title.value = aiCopy.value.seoTitle; shortDescription.value = aiCopy.value.shortDescription; description.value = aiCopy.value.description; }
-async function checkQuality() { try { quality.value = marketplaceApi.enabled ? await marketplaceApi.listingQuality({title:title.value,category:category.value,description:description.value,images:[],specifications:specifications.value}) : {score:[title.value.length>=15,Boolean(category.value),description.value.length>=60,specifications.value.length>=10].filter(Boolean).length*25,suggestions:[...(title.value.length<15?["Use a more specific title."]:[]),...(description.value.length<60?["Write a more helpful product description."]:[]),...(specifications.value.length<10?["Add product specifications."]:[]),"Add at least three product images." ]}; } catch(cause) { error.value = cause instanceof Error ? cause.message : "Listing quality could not be checked."; } }
+async function checkQuality() { try { quality.value = marketplaceApi.enabled ? await marketplaceApi.listingQuality({title:title.value,category:category.value,description:description.value,images:images.value,specifications:specifications.value}) : {score:[title.value.length>=15,Boolean(category.value),description.value.length>=60,images.value.length>=3,specifications.value.length>=10].filter(Boolean).length*20,suggestions:[...(title.value.length<15?["Use a more specific title."]:[]),...(description.value.length<60?["Write a more helpful product description."]:[]),...(specifications.value.length<10?["Add product specifications."]:[]),...(images.value.length<3?["Add at least three product images."]:[])]}; } catch(cause) { error.value = cause instanceof Error ? cause.message : "Listing quality could not be checked."; } }
+async function addImage(event: Event) { const input=event.target as HTMLInputElement;const file=input.files?.[0];if(!file)return;if(file.size>5*1024*1024){error.value="Choose an image smaller than 5 MB.";input.value="";return;}uploadingImage.value=true;error.value="";try{images.value.push(await uploadProductImage(file));}catch(cause){error.value=cause instanceof Error?cause.message:"Image upload failed.";}finally{uploadingImage.value=false;input.value="";} }
 function submit() {
   if (
     !title.value.trim() ||
@@ -51,6 +54,7 @@ function submit() {
       shortDescription: shortDescription.value,
       description: description.value,
       specifications: specifications.value,
+      images: images.value,
     });
   } else
     sellerData.products.unshift({
@@ -63,6 +67,7 @@ function submit() {
       shortDescription: shortDescription.value,
       description: description.value,
       specifications: specifications.value,
+      images: images.value,
       status: "Under review",
     });
   router.push("/products");
@@ -148,11 +153,10 @@ function submit() {
         /></label>
       </div>
       <div class="upload-placeholder">
-        <span><Save /></span><b>Product images</b
-        ><small
-          >Image upload is enabled in a later phase. Save product details
-          now.</small
-        >
+        <span><Save /></span><b>Product images</b>
+        <small>JPG, PNG, or WebP · up to 5 MB per image.</small>
+        <label class="secondary-button image-picker">{{ uploadingImage ? "Uploading…" : "Add image" }}<input type="file" accept="image/jpeg,image/png,image/webp" :disabled="uploadingImage" @change="addImage" /></label>
+        <div v-if="images.length" class="product-image-list"><figure v-for="(image,index) in images" :key="image"><img :src="image" :alt="`Product image ${index+1}`" /><button type="button" :aria-label="`Remove product image ${index+1}`" @click="images.splice(index,1)">Remove</button></figure></div>
       </div>
       <p v-if="error" class="form-alert" role="alert">{{ error }}</p>
       <div class="form-actions">

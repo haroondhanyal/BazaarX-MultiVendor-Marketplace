@@ -44,6 +44,7 @@ export class PromotionsController {
     if (!voucher) throw new NotFoundException("Voucher not found");
     if (!["ACTIVE", "PAUSED", "SCHEDULED"].includes(status)) throw new BadRequestException("Voucher status is not supported.");
     voucher.status = status as VoucherRecord["status"];
+    vouchers.set(voucher.code,voucher);
     return voucher;
   }
 
@@ -59,6 +60,7 @@ export class PromotionsController {
     if (!campaign) throw new NotFoundException("Campaign not found");
     if (!["ACTIVE", "PAUSED", "SCHEDULED", "PENDING_APPROVAL"].includes(status)) throw new BadRequestException("Campaign status is not supported.");
     campaign.status = status as CampaignRecord["status"];
+    campaigns.set(campaign.id,campaign);
     return campaign;
   }
 
@@ -84,6 +86,7 @@ export class PromotionsController {
     if (!sale) throw new NotFoundException("Flash sale not found");
     if (!["ACTIVE", "PAUSED", "SCHEDULED"].includes(status)) throw new BadRequestException("Flash sale status is not supported.");
     sale.status = status as FlashSaleRecord["status"];
+    flashSales.set(sale.id,sale);
     return sale;
   }
 }

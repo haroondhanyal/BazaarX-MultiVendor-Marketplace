@@ -48,7 +48,7 @@ docs/        local setup and team development notes
 
 Each portal has its own views, router, services, and shell. API modules group endpoints by marketplace domain. Small frontend service modules own HTTP calls, and views call those services. Prisma models and SQL migrations document the persistent data shape.
 
-Phase 9 chat refreshes over REST polling every five seconds. Presence and typing are demo states; image attachments are image URLs. No real-time socket server or binary upload/storage provider is configured. Notifications currently appear in-app; email, SMS, and push delivery providers are not connected.
+Phase 9 chat uses Socket.IO events for live messages, typing, and read receipts, with a 30-second REST refresh when a socket disconnects. The demo does not authenticate socket participants. Image uploads accept JPG, PNG, and WebP files up to 5 MB and save them locally under `apps/api/uploads`. Email, SMS, and push channels can POST to provider webhooks configured through `.env.example`.
 
 Phase 10 uses a deterministic local mock AI provider behind a provider interface. It searches seeded catalog products and returns generated demo review summaries without calling an external model. Replace the provider and review source before relying on generated copy or sentiment for live listings.
 
@@ -64,9 +64,9 @@ npm run dev:admin    # admin portal at http://localhost:5175
 npm run dev:api      # API at http://localhost:3001/api/v1
 ```
 
-Copy `.env.example` to `.env` at the repository root to connect all three portals to the API. The API remains a process-memory mock: orders, shipments, returns, vouchers, campaigns, flash sales, settlements, chat, support tickets, and notifications reset when the API restarts. Prisma migrations describe the database shape, but these endpoints do not persist to PostgreSQL yet.
+Copy `.env.example` to `.env` at the repository root to connect all three portals to the API. By default, mutable demo records are stored as JSON under `apps/api/var/state`, so they survive restarts on one host. Set `MARKETPLACE_STATE_DIR` to a persistent writable volume when running the API. To use PostgreSQL, set `PERSISTENCE_DRIVER=postgres`, configure `DATABASE_URL`, then run `npm run db:deploy --workspace @bazaarx/api` before starting the API. This adapter saves records in the `ApiState` JSON table; normalized Prisma models document the target data shape. The file adapter is for a single API process.
 
-The buyer app uses browser local storage for its demo flow by default. With the root `.env` configured, implemented buyer, seller, and admin flows use the shared mock API. API catalog records and browser demo products are seeded separately. Login is a front-end demo; API routes do not enforce authentication or role authorization. Real payment, shipping, notification delivery, identity providers, uploads, and database-backed repositories are future work.
+The buyer app uses browser local storage for its demo flow by default. With the root `.env` configured, implemented buyer, seller, and admin flows use the shared API. API catalog records and browser demo products are seeded separately. Login is a front-end demo; API routes do not enforce authentication or role authorization. AI uses a deterministic local provider. Production authentication, cloud image storage, real AI/payment providers, and courier integrations still need deployment credentials and configuration.
 
 Before sharing a build, run `npm run type-check` and `npm run build` from the repository root. Open `http://localhost:3001/api/docs` while the API is running to inspect the API documentation.
 

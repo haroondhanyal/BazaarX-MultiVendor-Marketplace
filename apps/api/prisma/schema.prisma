@@ -7,6 +7,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model ApiState {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
 model User {
   id             String          @id @default(cuid())
   email          String          @unique

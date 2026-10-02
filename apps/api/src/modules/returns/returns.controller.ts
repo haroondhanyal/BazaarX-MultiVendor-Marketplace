@@ -1,10 +1,11 @@
+import { PersistentMap } from "../../common/persistent-map";
 import { IsArray, IsIn, IsOptional, IsString, MinLength } from "class-validator";
 import { BadRequestException, Body, Controller, Get, NotFoundException, Param, Patch, Post } from "@nestjs/common";
 import { findMockOrder } from "../orders/orders.controller";
 import { pushNotification } from "../communication/communication.controller";
 
-const returns = new Map<string, ReturnRecord>();
-const refunds = new Map<string, RefundRecord>();
+const returns = new PersistentMap<string, ReturnRecord>("returns");
+const refunds = new PersistentMap<string, RefundRecord>("refunds");
 interface ReturnEvent { status: string; time: string; note: string }
 interface ReturnRecord { id: string; orderId: string; productId: string; itemName: string; seller: string; quantity: number; reason: string; description: string; refundMethod: string; refundAmount: number; status: string; createdAt: string; events: ReturnEvent[]; evidence: string[] }
 interface RefundRecord { id: string; returnId: string; orderId: string; amount: number; method: string; status: string; createdAt: string }
@@ -50,6 +51,7 @@ export class ReturnsController {
     };
     if (!allowed[request.status]?.includes(body.status)) throw new BadRequestException(`Cannot change a ${request.status} request to ${body.status}.`);
     request.status = body.status;
+    returns.set(returnId,request);
     const time = new Date().toISOString();
     request.events.push({ status: body.status, time, note: body.note ?? body.status.replaceAll("_", " ").toLowerCase() });
     if (body.status === "REFUNDED") {

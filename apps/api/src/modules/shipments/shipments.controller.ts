@@ -1,10 +1,11 @@
+import { PersistentMap } from "../../common/persistent-map";
 import { IsIn, IsOptional, IsString, MinLength } from "class-validator";
 import { BadRequestException, Body, Controller, Get, Headers, NotFoundException, Param, Patch, Post } from "@nestjs/common";
-import { findMockOrder } from "../orders/orders.controller";
+import { findMockOrder, persistMockOrder } from "../orders/orders.controller";
 import { pushNotification } from "../communication/communication.controller";
 
-const shipmentMap = new Map<string, ShipmentRecord>();
-const shipmentKeys = new Map<string, ShipmentRecord>();
+const shipmentMap = new PersistentMap<string, ShipmentRecord>("shipmentMap");
+const shipmentKeys = new PersistentMap<string, ShipmentRecord>("shipment-keys");
 interface TrackingEvent { id: string; status: string; location: string; time: string; notes: string }
 interface ShipmentRecord { id: string; orderId: string; trackingNumber: string; courier: string; status: string; estimatedDelivery: string; events: TrackingEvent[] }
 class CreateShipmentDto { @IsOptional() @IsString() courier?: string; }
@@ -43,6 +44,7 @@ export class ShipmentsController {
       ],
     };
     order.status = "PACKED";
+    persistMockOrder(order);
     shipmentMap.set(shipment.id, shipment);
     if (key) shipmentKeys.set(key, shipment);
     return shipment;
@@ -70,8 +72,10 @@ export class ShipmentsController {
     const event: TrackingEvent = { id: `${Date.now()}`, status: body.status, location: body.location, time: new Date().toISOString(), notes: body.notes ?? labels[body.status] };
     shipment.events.push(event);
     shipment.status = body.status;
+    shipmentMap.set(shipment.id, shipment);
+    for (const [key, saved] of shipmentKeys) if (saved.id === shipment.id) shipmentKeys.set(key,shipment);
     const order = findMockOrder(shipment.orderId);
-    if (order) order.status = body.status === "DELIVERED" ? "DELIVERED" : body.status === "OUT_FOR_DELIVERY" || body.status === "PICKED_UP" ? "SHIPPED" : "PACKED";
+    if (order) { order.status = body.status === "DELIVERED" ? "DELIVERED" : body.status === "OUT_FOR_DELIVERY" || body.status === "PICKED_UP" ? "SHIPPED" : "PACKED"; persistMockOrder(order); }
     if (body.status === "OUT_FOR_DELIVERY" || body.status === "DELIVERED") pushNotification("customer", body.status === "DELIVERED" ? "delivery" : "shipment", body.status === "DELIVERED" ? "Order delivered" : "Out for delivery", `Shipment ${shipment.trackingNumber} is ${body.status.toLowerCase().replaceAll("_", " ")}.`, `/orders/${shipment.orderId}/tracking`);
     return shipment;
   }

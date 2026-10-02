@@ -19,7 +19,23 @@ export const communicationApi = {
   tickets() { return request<{data: Ticket[]}>('/support/tickets?userId=customer'); },
   createTicket(input: {category:string; subject:string; message:string}) { return request<Ticket>('/support/tickets', {method:'POST', body:JSON.stringify({...input,userId:'customer'})}); },
 };
+export async function uploadChatImage(file: File) {
+  if (!base) throw new Error("VITE_API_URL is not configured.");
+  const form = new FormData();
+  form.set("image", file);
+  const response = await fetch(`${base}/uploads/image`, { method: "POST", body: form });
+  const result = (await response.json()) as { url?: string; message?: string | string[] };
+  if (!response.ok || !result.url) {
+    throw new Error(Array.isArray(result.message) ? result.message.join(", ") : result.message || "Image upload failed.");
+  }
+  return result.url;
+}
+export function connectChatSocket() {
+  if (!base) return null;
+  return io(`${new URL(base).origin}/chat`, { transports: ["websocket", "polling"] });
+}
 export interface ChatMessage { id:string; sender:string; text:string; sentAt:string; read:boolean; attachmentUrl?:string; productId?:string; orderId?:string }
 export interface Conversation { id:string; buyer:string; seller:string; lastMessage:string; updatedAt:string; online:boolean; typing:string|null; messages:ChatMessage[] }
 export interface Notice { id:string; userId:string; type:string; title:string; message:string; createdAt:string; readAt?:string; link?:string }
 export interface Ticket { id:string; userId:string; category:string; subject:string; message:string; status:string; createdAt:string; comments:Array<{id:string;author:string;message:string;createdAt:string}> }
+import { io } from "socket.io-client";

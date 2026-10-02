@@ -11,6 +11,7 @@ export interface SellerProduct {
   shortDescription?: string;
   description?: string;
   specifications?: string;
+  images?: string[];
 }
 export interface SellerOrder {
   id: string;

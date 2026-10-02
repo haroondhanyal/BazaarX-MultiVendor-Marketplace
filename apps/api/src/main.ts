@@ -4,7 +4,8 @@ import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { AppModule } from "./modules/app.module";
+import { PrismaClient } from "@prisma/client";
+import { flushPersistentMaps, restorePersistentMaps } from "./common/persistent-map";
 
 // Read the shared workspace .env file without adding a runtime dependency.
 try {
@@ -16,6 +17,20 @@ try {
 } catch { /* Environment variables may be provided by the host instead. */ }
 
 async function bootstrap() {
+  const { AppModule } = await import("./modules/app.module");
+  let prisma: PrismaClient | undefined;
+  if (process.env.PERSISTENCE_DRIVER === "postgres") {
+    prisma = new PrismaClient();
+    try {
+      await prisma.$connect();
+      await restorePersistentMaps(prisma);
+      console.log("BazaarX PostgreSQL state store connected.");
+    } catch (error) {
+      console.error("PostgreSQL state store unavailable; using local JSON state.", error);
+      await prisma.$disconnect();
+      prisma = undefined;
+    }
+  }
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix("api/v1");
   const swaggerConfig = new DocumentBuilder()
@@ -38,6 +53,8 @@ async function bootstrap() {
   });
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   const port = Number(process.env.PORT ?? 3001);
+  app.enableShutdownHooks();
+  if (prisma) app.getHttpServer().once("close", () => { void flushPersistentMaps().finally(() => prisma?.$disconnect()); });
   await app.listen(port);
   console.log(`BazaarX API listening on http://localhost:${port}/api/v1`);
 }

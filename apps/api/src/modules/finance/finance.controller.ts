@@ -1,3 +1,4 @@
+import { PersistentMap } from "../../common/persistent-map";
 import { IsIn, IsInt, IsOptional, IsString, Min } from "class-validator";
 import { Body, Controller, Get, NotFoundException, Param, Patch, Post, Query, BadRequestException } from "@nestjs/common";
 import { catalog } from "../catalog/catalog.controller";
@@ -6,13 +7,13 @@ import { listMockReturns } from "../returns/returns.controller";
 
 interface CommissionRule { category: string; rate: number; active: boolean }
 interface Settlement { id: string; sellerId: string; periodStart: string; periodEnd: string; createdAt: string; status: "ELIGIBLE" | "SETTLED"; amount: number; orderIds: string[] }
-const commissionRules = new Map<string, CommissionRule>([
+const commissionRules = new PersistentMap<string, CommissionRule>("commissionRules", [
   ["Mobiles", { category: "Mobiles", rate: 5, active: true }],
   ["Electronics", { category: "Electronics", rate: 5, active: true }],
   ["Fashion", { category: "Fashion", rate: 8, active: true }],
   ["Beauty", { category: "Beauty", rate: 10, active: true }],
 ]);
-const settlements = new Map<string, Settlement>();
+const settlements = new PersistentMap<string, Settlement>("settlements");
 const settledItems = new Set<string>();
 class SettlementStatusDto { @IsIn(["SETTLED"]) status!: "SETTLED"; }
 
@@ -93,6 +94,7 @@ export class FinanceController {
     const settlement = settlements.get(id);
     if (!settlement) throw new NotFoundException("Settlement batch not found");
     settlement.status = body.status;
+    settlements.set(settlement.id,settlement);
     return settlement;
   }
 }

@@ -1,3 +1,4 @@
+import { PersistentMap } from "../../common/persistent-map";
 import {
   ArrayMinSize,
   IsArray,
@@ -22,8 +23,9 @@ import {
   Patch,
 } from "@nestjs/common";
 import { catalog } from "../catalog/catalog.controller";
-import { activeFlashPrice, calculateVoucher, vouchers } from "../promotions/promotion-data";
+import { activeFlashPrice, calculateVoucher, flashSales, vouchers } from "../promotions/promotion-data";
 import { pushNotification } from "../communication/communication.controller";
+import { saveStock } from "../../common/inventory-state";
 
 class CheckoutItemDto {
   @IsString() productId!: string;
@@ -67,10 +69,17 @@ interface OrderRecord {
     flashSaleId?: string;
   }>;
 }
-const orders = new Map<string, OrderRecord>();
-const checkoutKeys = new Map<string, OrderRecord>();
+const orders = new PersistentMap<string, OrderRecord>("orders");
+const checkoutKeys = new PersistentMap<string, OrderRecord>("checkout-keys");
 export function findMockOrder(id: string) {
   return orders.get(id);
+}
+
+export function persistMockOrder(order: OrderRecord) {
+  orders.set(order.id, order);
+  for (const [key, saved] of checkoutKeys) {
+    if (saved.id === order.id) checkoutKeys.set(key, order);
+  }
 }
 export function listMockOrders() {
   return [...orders.values()];
@@ -131,11 +140,12 @@ export class OrdersController {
     };
     for (const line of lines) {
       line.product.stock -= line.quantity;
-      if (line.flash) line.flash.item.sold += line.quantity;
+      saveStock(line.product.id, line.product.stock);
+      if (line.flash) { line.flash.item.sold += line.quantity; flashSales.set(line.flash.sale.id,line.flash.sale); }
     }
     if (voucherCodeUsed) {
       const voucher = vouchers.get(voucherCodeUsed);
-      if (voucher) voucher.used += 1;
+      if (voucher) { voucher.used += 1; vouchers.set(voucher.code,voucher); }
     }
     orders.set(order.id, order);
     if (key) checkoutKeys.set(key, order);
@@ -163,6 +173,7 @@ export class OrdersController {
     if (body.status === "CANCELLED" && order.status !== "PLACED" && order.status !== "PAYMENT_PENDING") throw new BadRequestException("Only an unprocessed order can be cancelled.");
     if (body.status === "SELLER_PROCESSING" && order.status !== "PLACED") throw new BadRequestException("The seller can only accept a placed order.");
     order.status = body.status;
+    orders.set(order.id, order);
     return order;
   }
 }

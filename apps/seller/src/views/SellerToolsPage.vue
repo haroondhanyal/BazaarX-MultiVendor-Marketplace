@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { ArrowDownToLine, Check, ChevronRight, Plus, Search, Send, Store, TrendingUp } from "lucide-vue-next";
-import { marketplaceApi } from "../services/marketplace";
+import { connectSellerChat, marketplaceApi } from "../services/marketplace";
 
 type Row = { name: string; detail: string; status: string; value: string };
 const route = useRoute();
@@ -24,6 +24,9 @@ const search = ref("");
 const feedback = ref("");
 const reply = ref("");
 const selectedConversation = ref("");
+let chatSocket: ReturnType<typeof connectSellerChat> = null;
+const buyerByConversation = new Map<string, string>();
+const conversationByBuyer = new Map<string, string>();
 const campaignName = ref("");
 const campaignDescription = ref("");
 const filtered = computed(() => rows.value.filter((item) => `${item.name} ${item.detail} ${item.status}`.toLowerCase().includes(search.value.toLowerCase())));
@@ -54,6 +57,9 @@ async function load() {
       stats.value = [`${sellerReturns.filter((entry) => !["REFUNDED", "REJECTED"].includes(entry.status)).length} active requests`, money(sellerReturns.reduce((sum, entry) => sum + entry.refundAmount, 0)), "Track every review step"];
     } else if (section.value === "messages") {
       const result = await marketplaceApi.conversations();
+      buyerByConversation.clear();
+      conversationByBuyer.clear();
+      result.data.forEach((entry) => { buyerByConversation.set(entry.id, entry.buyer); conversationByBuyer.set(entry.buyer,entry.id); chatSocket?.emit("conversation:join", { conversationId: entry.id }); });
       rows.value = result.data.map((entry) => ({ name: entry.buyer, detail: entry.lastMessage, status: entry.online ? "Online" : "Offline", value: entry.updatedAt }));
       selectedConversation.value = result.data[0]?.id ?? "";
       stats.value = [`${result.data.length} conversations`, `${result.data.filter((entry) => entry.messages.some((message) => !message.read && message.sender === "buyer")).length} unread`, "Updates every 5 seconds"];
@@ -64,13 +70,24 @@ async function load() {
     }
   } catch (cause) { feedback.value = cause instanceof Error ? cause.message : "The marketplace API could not be reached. Showing saved demo data."; }
 }
+onMounted(() => {
+  chatSocket = connectSellerChat();
+  chatSocket?.on("message:new", (event: {conversationId:string;message:{sender:string;text:string}}) => {
+    if (event.message.sender !== "buyer") return;
+    const buyer = buyerByConversation.get(event.conversationId);
+    const row = rows.value.find((item) => item.name === buyer);
+    if (row) { row.detail = event.message.text; row.status = "Unread"; }
+  });
+  if (section.value === "messages") void load();
+});
+onBeforeUnmount(() => chatSocket?.disconnect());
 watch(section, () => { void load(); }, { immediate: true });
 async function act(row: Row) {
   try {
     if (section.value === "returns" && marketplaceApi.enabled) {
       await marketplaceApi.updateReturn(row.name, "APPROVED", "Seller approved return and requested pickup.");
       row.status = "APPROVED";
-    } else if (section.value === "messages") row.status = "Replied";
+    } else if (section.value === "messages") { const id=conversationByBuyer.get(row.name); if(id&&marketplaceApi.enabled) await marketplaceApi.markConversationRead(id); row.status = "Replied"; }
     else row.status = row.status === "Approved" ? "Refunded" : row.status === "Processing" ? "Paid" : "Updated";
     localStorage.setItem(`bx-seller-${section.value}`, JSON.stringify(rows.value));
     feedback.value = `${row.name} updated successfully.`;

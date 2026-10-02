@@ -810,6 +810,12 @@ main section > p {
 .upload-placeholder small {
   font-size: 8px;
 }
+.image-picker { position: relative; overflow: hidden; cursor: pointer; }
+.image-picker input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.product-image-list { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px; }
+.product-image-list figure { display: grid; justify-items: center; gap: 4px; margin: 0; }
+.product-image-list img { width: 68px; height: 68px; object-fit: cover; border-radius: 7px; }
+.product-image-list button { border: 0; background: transparent; color: #b43b28; font-size: 9px; cursor: pointer; }
 .form-actions {
   display: flex;
   justify-content: flex-end;

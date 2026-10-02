@@ -8,6 +8,12 @@ import {
   Patch,
 } from "@nestjs/common";
 import { catalog } from "../catalog/catalog.controller";
+import { saveStock, savedStock } from "../../common/inventory-state";
+
+for (const product of catalog) {
+  const stock = savedStock(product.id);
+  if (stock !== undefined) product.stock = stock;
+}
 
 class StockUpdateDto {
   @IsInt() @Min(0) stock!: number;
@@ -31,6 +37,7 @@ export class InventoryController {
     const product = catalog.find((item) => item.id === productId);
     if (!product) throw new NotFoundException("Product not found");
     product.stock = body.stock;
+    saveStock(product.id,body.stock);
     return { productId, available: product.stock };
   }
 }
