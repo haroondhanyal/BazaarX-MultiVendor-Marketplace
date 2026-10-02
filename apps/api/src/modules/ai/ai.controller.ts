@@ -18,7 +18,7 @@ function selectProducts(query: string) {
   const terms = query.toLowerCase().split(/[^a-z0-9]+/).filter((term) => term.length > 2 && !ignored.includes(term));
   const budget = budgetFrom(query);
   return catalog.map((product) => {
-    const searchable = `${product.name} ${product.category} ${product.brand} ${product.description} ${Object.values(product.specifications).join(" ")}`.toLowerCase();
+    const searchable = `${product.name} ${product.category} ${product.brand} ${product.description} ${Object.values(product.specifications ?? {}).join(" ")}`.toLowerCase();
     return { product, score: terms.reduce((score, term) => score + (searchable.includes(term) ? 1 : 0), 0) };
   }).filter(({ product, score }) => score > 0 && (!budget || product.price <= budget)).sort((a, b) => b.score - a.score || b.product.rating - a.product.rating).map(({ product }) => product);
 }

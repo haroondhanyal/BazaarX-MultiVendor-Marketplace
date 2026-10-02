@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { adminData } from "../data";
 import { Search, Check, X, Package } from "lucide-vue-next";
 const query = ref("");
 const status = ref("All");
+const visibleCount = ref(10);
 const products = computed(() =>
   adminData.products.filter(
     (p) =>
@@ -13,6 +14,8 @@ const products = computed(() =>
         .includes(query.value.toLowerCase()),
   ),
 );
+const visibleProducts = computed(() => products.value.slice(0, visibleCount.value));
+watch([query, status], () => { visibleCount.value = 10; });
 function decide(id: string, status: "Approved" | "Rejected") {
   const item = adminData.products.find((product) => product.id === id);
   if (item) item.status = status;
@@ -56,7 +59,7 @@ function decide(id: string, status: "Approved" | "Rejected") {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="product in products" :key="product.id">
+            <tr v-for="product in visibleProducts" :key="product.id">
               <td>
                 <span class="admin-entity"
                   ><i><Package /></i
@@ -98,6 +101,7 @@ function decide(id: string, status: "Approved" | "Rejected") {
           </tbody>
         </table>
       </div>
+      <button class="load-more-button" :disabled="visibleCount >= products.length" @click="visibleCount = Math.min(visibleCount + 10, products.length)">{{ visibleCount < products.length ? `Load more products (${products.length - visibleCount} left)` : 'All products loaded' }}</button>
       <div v-if="!products.length" class="admin-empty">
         No products match this filter.
       </div>

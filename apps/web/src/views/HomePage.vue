@@ -20,7 +20,17 @@ import { categories, products } from "../data/products";
 import SiteHeader from "../components/SiteHeader.vue";
 import SiteFooter from "../components/SiteFooter.vue";
 import ProductCard from "../components/ProductCard.vue";
-const featured = computed(() => products.slice(0, 4));
+const hotVisible = ref(12);
+const dealVisible = ref(8);
+const hotSelling = computed(() => [...products].sort((a, b) =>
+  b.reviews * b.rating - a.reviews * a.rating,
+));
+const deals = computed(() => [...products].filter((product) => product.originalPrice)
+  .sort((a, b) => (b.originalPrice! - b.price) / b.originalPrice! - (a.originalPrice! - a.price) / a.originalPrice!));
+const visibleHotSelling = computed(() => hotSelling.value.slice(0, hotVisible.value));
+const visibleDeals = computed(() => deals.value.slice(0, dealVisible.value));
+function loadMoreHot() { hotVisible.value = Math.min(hotVisible.value + 12, hotSelling.value.length); }
+function loadMoreDeals() { dealVisible.value = Math.min(dealVisible.value + 8, deals.value.length); }
 const categoryIcons = [
   Smartphone,
   Laptop,
@@ -144,12 +154,22 @@ const countdown = ref("08 : 42 : 16");
           /></RouterLink>
         </div>
       </section>
+      <section class="container section-block offer-section">
+        <div class="section-heading">
+          <div><span class="eyebrow">LIMITED-TIME SAVINGS</span><h2>Today’s hot deals <span class="offer-flame">⚡</span></h2><p>Reduced prices on popular BazaarX finds.</p></div>
+          <RouterLink to="/flash-sales" class="text-link">More offers <ArrowRight :size="16" /></RouterLink>
+        </div>
+        <div class="product-grid">
+          <ProductCard v-for="product in visibleDeals" :key="product.id" :product="product" />
+        </div>
+        <button v-if="dealVisible < deals.length" class="load-more-button" @click="loadMoreDeals">Load more deals <span>({{ deals.length - dealVisible }} left)</span></button>
+      </section>
       <section class="container section-block featured-section">
         <div class="section-heading">
           <div>
-            <span class="eyebrow">HANDPICKED FOR YOU</span>
-            <h2>Popular right now</h2>
-            <p>Good things shoppers are loving lately.</p>
+            <span class="eyebrow">TRENDING WITH SHOPPERS</span>
+            <h2>Hot selling right now</h2>
+            <p>Popular picks with strong customer ratings.</p>
           </div>
           <RouterLink to="/search" class="text-link"
             >See all products <ArrowRight :size="16"
@@ -157,11 +177,12 @@ const countdown = ref("08 : 42 : 16");
         </div>
         <div class="product-grid">
           <ProductCard
-            v-for="product in featured"
+            v-for="product in visibleHotSelling"
             :key="product.id"
             :product="product"
           />
         </div>
+        <button v-if="hotVisible < hotSelling.length" class="load-more-button" @click="loadMoreHot">Load more hot sellers <span>({{ hotSelling.length - hotVisible }} left)</span></button>
       </section>
       <section class="container seller-banner">
         <div class="seller-banner-icon"><BadgeCheck /></div>

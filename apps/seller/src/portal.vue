@@ -20,11 +20,16 @@ import {
   Settings,
   MessageCircle,
   Wallet,
+  Moon,
+  Sun,
 } from "lucide-vue-next";
+import { getThemeMode, toggleThemeMode } from "@bazaarx/ui";
 import { sellerData } from "./data";
 const route = useRoute();
 const router = useRouter();
 const menuOpen = ref(false);
+const darkMode = ref(getThemeMode() === "dark");
+function toggleTheme() { darkMode.value = toggleThemeMode() === "dark"; }
 const links = [
   { name: "Dashboard", path: "/", icon: LayoutDashboard },
   { name: "Store onboarding", path: "/onboarding", icon: Store },
@@ -93,6 +98,8 @@ function logout() {
             aria-label="Search products or orders"
             placeholder="Search products, orders..." /></label
         ><button aria-label="Notifications"><Bell /></button>
+        <a class="portal-switch" href="/">Buyer</a><a class="portal-switch" href="/admin/">Admin</a>
+        <button class="theme-toggle" type="button" :aria-label="darkMode ? 'Switch to light theme' : 'Switch to dark theme'" @click="toggleTheme"> <Sun v-if="darkMode" /><Moon v-else /></button>
         <div class="avatar">S</div>
         <span class="user">Your store<small>Seller account</small></span>
       </header>

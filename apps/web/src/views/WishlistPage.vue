@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { Heart, ShoppingCart, Trash2, ArrowRight } from "lucide-vue-next";
+import { computed, ref } from "vue";
+import { Heart, Trash2, ArrowRight } from "lucide-vue-next";
 import { useShopStore } from "../stores/shop";
 import SiteHeader from "../components/SiteHeader.vue";
 import SiteFooter from "../components/SiteFooter.vue";
 import ProductCard from "../components/ProductCard.vue";
 import StatusView from "../components/StatusView.vue";
 const shop = useShopStore();
+const visibleCount = ref(12);
+const visibleProducts = computed(() => shop.savedProducts.slice(0, visibleCount.value));
 </script>
 <template>
   <div class="page-shell">
@@ -32,11 +35,12 @@ const shop = useShopStore();
       </div>
       <div v-if="shop.savedProducts.length" class="product-grid">
         <ProductCard
-          v-for="product in shop.savedProducts"
+          v-for="product in visibleProducts"
           :key="product.id"
           :product="product"
         />
       </div>
+      <button v-if="visibleCount < shop.savedProducts.length" class="load-more-button" @click="visibleCount = Math.min(visibleCount + 12, shop.savedProducts.length)">Load more saved products ({{ shop.savedProducts.length - visibleCount }} left)</button>
       <div v-else class="empty-card">
         <StatusView
           mode="empty"

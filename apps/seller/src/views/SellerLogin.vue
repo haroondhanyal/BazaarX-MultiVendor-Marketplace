@@ -1,63 +1,126 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
-import { Mail, LockKeyhole, Store, ArrowRight } from "lucide-vue-next";
+import {
+  ArrowRight, Eye, EyeOff, LockKeyhole, Mail, MapPin, Phone,
+  Moon, ShieldCheck, Store, Sun, Upload, UserRound,
+} from "lucide-vue-next";
+import { authenticateDemoAccount, countries, demoAccounts, getThemeMode, registerDemoAccount, toggleThemeMode, type CountryCode } from "@bazaarx/ui";
 import { sellerData } from "../data";
+
 const router = useRouter();
-const email = ref("");
-const password = ref("");
+const mode = ref<"signin" | "signup">("signin");
+const showPassword = ref(false);
+const darkMode = ref(getThemeMode() === "dark");
+const countryCode = ref<CountryCode>("PK");
+const profileImage = ref("");
 const error = ref("");
-function submit() {
-  if (!email.value.includes("@") || password.value.length < 8) {
-    error.value =
-      "Enter a valid email and a password of at least 8 characters.";
+const form = reactive({ name: "", email: "", phone: "", city: "", password: "" });
+const country = computed(() => countries.find((item) => item.code === countryCode.value) ?? countries[0]);
+
+function setMode(nextMode: "signin" | "signup") {
+  mode.value = nextMode;
+  error.value = "";
+}
+function toggleTheme() { darkMode.value = toggleThemeMode() === "dark"; }
+
+function selectImage(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+  if (!file.type.startsWith("image/")) {
+    error.value = "Please choose an image file.";
     return;
   }
+  if (file.size > 3 * 1024 * 1024) {
+    error.value = "Choose an image smaller than 3 MB.";
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => { profileImage.value = String(reader.result ?? ""); };
+  reader.onerror = () => { error.value = "This image could not be opened."; };
+  reader.readAsDataURL(file);
+}
+
+function submit() {
+  error.value = "";
+  if (form.password.length < 8) {
+    error.value = "Password must be at least 8 characters.";
+    return;
+  }
+  if (mode.value === "signup") {
+    const registered = registerDemoAccount("seller", {
+      name: form.name.trim(), email: form.email.trim(), password: form.password,
+      phone: `${country.value.dial} ${form.phone.trim()}`, city: form.city.trim(), country: country.value.name,
+    });
+    if (!registered) {
+      error.value = "This email already has a seller account. Please sign in.";
+      return;
+    }
+    localStorage.setItem("bx-seller-profile", JSON.stringify({
+      name: form.name.trim(), email: form.email.trim(), phone: `${country.value.dial} ${form.phone.trim()}`,
+      city: form.city.trim(), country: country.value.name, countryCode: country.value.code, image: profileImage.value,
+    }));
+  } else {
+    const account = authenticateDemoAccount("seller", form.email, form.password);
+    if (!account) {
+      error.value = "Account not found. Use a demo login below or create a new account.";
+      return;
+    }
+    const { name, email, phone, city, country: countryName } = account;
+    localStorage.setItem("bx-seller-profile", JSON.stringify({ name, email, phone, city, country: countryName }));
+  }
   sellerData.loggedIn = true;
-  router.push("/");
+  void router.push("/");
 }
 </script>
+
 <template>
-  <main class="seller-login">
-    <RouterLink to="/" class="login-logo"
-      ><img src="/assets/branding/bazaarx-logo.png" alt="BazaarX"
-    /></RouterLink>
-    <section>
-      <span class="eyebrow">SELLER CENTER</span>
-      <h1>Welcome back.</h1>
-      <p>Sign in to manage your BazaarX store.</p>
-      <form @submit.prevent="submit">
-        <label class="form-field"
-          ><span>Business email</span
-          ><span class="login-input"
-            ><Mail /><input
-              v-model="email"
-              type="email"
-              autocomplete="email"
-              placeholder="you@yourstore.com"
-              required /></span></label
-        ><label class="form-field"
-          ><span>Password</span
-          ><span class="login-input"
-            ><LockKeyhole /><input
-              v-model="password"
-              type="password"
-              autocomplete="current-password"
-              placeholder="At least 8 characters"
-              required /></span
-        ></label>
-        <p v-if="error" class="form-alert" role="alert">{{ error }}</p>
-        <button class="primary-button">Sign in <ArrowRight /></button>
-      </form>
-      <div class="seller-login-note">
-        <Store /><span
-          >Demo mode — use any valid email and 8-character password.</span
-        >
-      </div>
-      <p class="seller-create-link">
-        New seller?
-        <RouterLink to="/onboarding">Set up your BazaarX store</RouterLink>
-      </p>
-    </section>
+  <main class="auth-page seller-auth">
+    <div class="auth-glow auth-glow-one"></div><div class="auth-glow auth-glow-two"></div>
+    <button class="auth-theme-toggle" type="button" :aria-label="darkMode ? 'Switch to light theme' : 'Switch to dark theme'" @click="toggleTheme"><Sun v-if="darkMode" /><Moon v-else />{{ darkMode ? 'Light mode' : 'Dark mode' }}</button>
+    <div class="auth-layout">
+      <section class="auth-story">
+        <RouterLink to="/login" class="auth-brand"><img src="/assets/branding/bazaarx-logo.png" alt="BazaarX" /><span>BAZAAR<span>X</span></span></RouterLink>
+        <div class="auth-story-copy">
+          <span class="auth-kicker"><Store /> SELLER CENTER</span>
+          <h1>Grow your store.<br /><span>Reach more people.</span></h1>
+          <p>Manage products, orders, inventory and payouts in one clear workspace built for your business.</p>
+          <div class="auth-highlights">
+            <div><b>One workspace</b><span>Tools for your daily store operations</span></div>
+            <div><b>Built for local sellers</b><span>Simple flows with PKR and local delivery</span></div>
+          </div>
+        </div>
+        <span class="auth-footnote"><ShieldCheck /> Secure demo workspace · BazaarX Seller Center</span>
+      </section>
+
+      <section class="auth-card-wrap">
+        <div class="auth-card">
+          <div class="auth-mobile-brand"><img src="/assets/branding/bazaarx-logo.png" alt="BazaarX" /><b>BAZAAR<span>X</span></b></div>
+          <div class="auth-switch"><button :class="{ active: mode === 'signin' }" @click="setMode('signin')">Sign in</button><button :class="{ active: mode === 'signup' }" @click="setMode('signup')">Create account</button></div>
+          <span class="auth-kicker card-kicker">{{ mode === 'signin' ? 'WELCOME BACK' : 'START SELLING' }}</span>
+          <h2>{{ mode === 'signin' ? 'Sign in to your store' : 'Create seller account' }}</h2>
+          <p class="auth-subtitle">{{ mode === 'signin' ? 'Pick up where you left off.' : 'A few details to set up your seller profile.' }}</p>
+
+          <form class="auth-form" @submit.prevent="submit">
+            <label v-if="mode === 'signup'" class="auth-field"><span>Full name</span><span class="auth-control"><UserRound /><input v-model="form.name" autocomplete="name" placeholder="Your name" required /></span></label>
+            <label class="auth-field"><span>Email address</span><span class="auth-control"><Mail /><input v-model="form.email" type="email" autocomplete="email" placeholder="you@yourstore.com" required /></span></label>
+            <template v-if="mode === 'signup'">
+              <label class="auth-field"><span>Mobile number</span><span class="auth-control phone-control"><span class="dial-prefix">{{ country.flag }} {{ country.dial }}</span><Phone /><input v-model="form.phone" type="tel" autocomplete="tel-national" placeholder="300 1234567" required /></span></label>
+              <div class="auth-field"><label for="seller-country"><span>Country</span></label><span class="auth-control"><MapPin /><select id="seller-country" v-model="countryCode" autocomplete="country-name"><option v-for="item in countries" :key="item.code" :value="item.code">{{ item.flag }} {{ item.name }}</option></select></span></div>
+              <label class="auth-field"><span>City</span><span class="auth-control"><MapPin /><input v-model="form.city" autocomplete="address-level2" placeholder="e.g. Karachi" required /></span></label>
+              <label class="auth-photo"><input type="file" accept="image/*" @change="selectImage" /><span class="auth-photo-preview"> <img v-if="profileImage" :src="profileImage" alt="Profile preview" /><UserRound v-else /></span><span><b>{{ profileImage ? 'Change profile photo' : 'Add a profile photo' }}</b><small>Optional · JPG or PNG, up to 3 MB</small></span><Upload class="photo-upload-icon" /></label>
+            </template>
+            <label class="auth-field"><span>Password</span><span class="auth-control"><LockKeyhole /><input v-model="form.password" :type="showPassword ? 'text' : 'password'" :autocomplete="mode === 'signup' ? 'new-password' : 'current-password'" placeholder="At least 8 characters" minlength="8" required /><button class="password-toggle" type="button" :aria-label="showPassword ? 'Hide password' : 'Show password'" @click="showPassword = !showPassword"><EyeOff v-if="showPassword" /><Eye v-else /></button></span></label>
+            <p v-if="error" class="auth-error" role="alert">{{ error }}</p>
+            <button class="auth-submit" type="submit">{{ mode === 'signin' ? 'Sign in' : 'Create seller account' }} <ArrowRight /></button>
+          </form>
+          <details v-if="mode === 'signin'" class="auth-demo-list"><summary>Show 5 demo seller accounts</summary><div v-for="account in demoAccounts.seller" :key="account.email"><b>{{ account.name }}</b><span>{{ account.email }}</span><code>{{ account.password }}</code></div></details>
+          <p class="auth-legal">By continuing, you agree to BazaarX demo terms and privacy notice.</p>
+          <RouterLink v-if="mode === 'signin'" class="auth-secondary-link" to="/onboarding">Already have a seller profile? Continue onboarding</RouterLink>
+          <button v-else class="auth-secondary-link mode-link" @click="setMode('signin')">Already registered? Sign in</button>
+        </div>
+        <span class="auth-card-foot">BAZAARX <i>·</i> SELLER TOOLS</span>
+      </section>
+    </div>
   </main>
 </template>

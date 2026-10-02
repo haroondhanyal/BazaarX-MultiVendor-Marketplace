@@ -22,9 +22,7 @@ import {
 } from "lucide-vue-next";
 const route = useRoute();
 const isAdmin = computed(() => route.path.startsWith("/admin"));
-const portalBase = computed(() => isAdmin.value
-  ? import.meta.env.VITE_ADMIN_PORTAL_URL || "http://localhost:5175"
-  : import.meta.env.VITE_SELLER_PORTAL_URL || "http://localhost:5174");
+const portalBase = computed(() => isAdmin.value ? "/admin" : "/seller");
 function portalUrl(name: string) {
   const adminRoutes: Record<string,string> = { Users:"users",Sellers:"sellers",Products:"moderation",Orders:"orders",Payments:"payments",Shipments:"shipments",Returns:"returns",Promotions:"promotions",Support:"support","Fraud & risk":"fraud",Settings:"settings" };
   const sellerRoutes: Record<string,string> = { Products:"products",Orders:"orders",Inventory:"inventory",Marketing:"promotions",Finance:"finance",Analytics:"analytics","Store settings":"store" };
@@ -143,7 +141,7 @@ const heading = computed(
                   : "Welcome to Seller Center"
               }}
             </h2>
-            <p>The full {{ isAdmin ? "admin portal" : "seller center" }} runs as a separate app.</p>
+            <p>Continue in the {{ isAdmin ? "admin portal" : "seller center" }} on this BazaarX URL.</p>
           </div>
           <a class="badge badge-neutral" :href="portalBase">Open portal</a>
         </div>

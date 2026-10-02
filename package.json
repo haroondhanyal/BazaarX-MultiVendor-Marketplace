@@ -11,6 +11,7 @@
     "dev:seller": "npm run dev --workspace @bazaarx/seller",
     "dev:admin": "npm run dev --workspace @bazaarx/admin",
     "dev:api": "npm run start:dev --workspace @bazaarx/api",
+    "dev:all": "node scripts/dev-all.cjs",
     "build": "npm run build --workspaces --if-present",
     "type-check": "npm run type-check --workspaces --if-present"
   }

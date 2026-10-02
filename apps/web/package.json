@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@bazaarx/types": "*",
+    "@bazaarx/catalog": "*",
+    "@bazaarx/ui": "*",
     "@bazaarx/validation": "*",
     "@vitejs/plugin-vue": "latest",
     "axios": "^1.7.9",

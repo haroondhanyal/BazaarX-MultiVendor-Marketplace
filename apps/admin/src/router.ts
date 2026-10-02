@@ -10,7 +10,7 @@ import AdminToolsPage from "./views/AdminToolsPage.vue";
 import { adminData } from "./data";
 
 export const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     { path: "/login", component: AdminLogin },
     {

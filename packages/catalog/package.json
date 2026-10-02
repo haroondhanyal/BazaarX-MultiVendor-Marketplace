@@ -1,0 +1,15 @@
+{
+  "name": "@bazaarx/catalog",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./index.cjs",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.mjs",
+      "require": "./index.cjs",
+      "default": "./index.mjs"
+    }
+  }
+}

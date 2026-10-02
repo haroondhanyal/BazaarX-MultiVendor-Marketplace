@@ -22,8 +22,8 @@
         ><a href="mailto:help@bazaarx.example">Contact us</a>
       </div>
       <div>
-        <b>Sell with us</b><a href="/seller">Seller Center</a
-        ><a href="/admin">Marketplace admin</a>
+        <b>Sell with us</b><a href="/seller/">Seller Center</a
+        ><a href="/admin/">Marketplace admin</a>
       </div>
     </div>
     <div class="container footer-bottom">

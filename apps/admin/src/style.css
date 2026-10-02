@@ -888,3 +888,18 @@ main section > p {
     height: 76px;
   }
 }
+.portal header .portal-switch,
+.portal header .portal-switch:visited {
+  margin-left: 0;
+  color: #526175;
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.portal header .portal-switch:hover { color: #e45a2a; }
+@media (max-width: 760px) {
+  .portal header { gap: 8px; padding: 0 12px; }
+  .portal header .portal-switch { font-size: 10px; }
+  .portal header .user { display: none; }
+}

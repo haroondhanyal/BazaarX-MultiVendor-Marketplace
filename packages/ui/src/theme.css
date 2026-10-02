@@ -1,0 +1,207 @@
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --navy: #e5eaf0;
+  --muted: #a7b2c1;
+  --line: #37414e;
+  --soft: #202730;
+  --shadow: 0 8px 30px #0005;
+  color: #e5eaf0;
+  background: #171c23;
+}
+html[data-theme="dark"] body {
+  color: #e5eaf0;
+  background: #171c23;
+}
+html[data-theme="dark"] .page-shell,
+html[data-theme="dark"] .page-shell main,
+html[data-theme="dark"] .content-page,
+html[data-theme="dark"] .product-page {
+  color: #e5eaf0;
+  background-color: #171c23;
+}
+html[data-theme="dark"] :is(
+  .site-header, .category-nav, .top-strip, .site-footer, .product-card,
+  .filter-panel, .account-panel, .account-sidebar, .account-main,
+  .cart-panel, .checkout-panel, .order-panel, .support-panel,
+  .flash-product, .flash-state, .assistant-results, .chat-window,
+  .auth-card, .seller-panel, .admin-panel, .metric-grid article,
+  .admin-metrics article, .side, .portal main > header, .portal-content,
+  .view-card, .settings-panel, .table-panel
+) {
+  color: #e2e8f0;
+  background-color: #222a34;
+  border-color: #37414e;
+}
+html[data-theme="dark"] :is(
+  .hero-grid, .benefit-row, .section-block, .content-page, .listing-layout,
+  .page-content, .admin-content, .portal-body, .portal-content
+) {
+  color: #e2e8f0;
+}
+html[data-theme="dark"] :is(
+  .site-header, .category-nav, .top-strip, .header-main, .category-nav-inner,
+  .product-info, .product-details, .filter-group, .account-main,
+  .account-sidebar, .cart-line, .checkout-section, .order-summary,
+  .seller-panel, .admin-panel
+) {
+  background-color: #222a34;
+}
+html[data-theme="dark"] :is(
+  h1, h2, h3, h4, p, small, label, .product-title, .section-heading h2,
+  .crumb, .view-heading h1, .admin-heading h1, .side-link, .side nav a,
+  .user, .portal-content .crumb, .product-info b, .admin-table td,
+  .seller-table td, .account-nav, .detail-copy
+) {
+  color: #e2e8f0;
+}
+html[data-theme="dark"] :is(
+  input, select, textarea, .plain-input, .product-tools input,
+  .product-tools select, .admin-tools input, .admin-tools select,
+  .inline-search, .sort-select, .chat-body form input
+) {
+  color: #e6edf5;
+  background-color: #171d25;
+  border-color: #455160;
+}
+html[data-theme="dark"] :is(input, textarea, select)::placeholder { color: #8996a6; }
+html[data-theme="dark"] :is(
+  .product-image-wrap, .gallery-main, .gallery-thumbs, .empty-state,
+  .stock-tag, .table-tools, .product-tools, .admin-tools, .table-empty,
+  .seller-table th, .admin-table th, .auth-extra, .search-empty
+) {
+  background-color: #1b222b;
+}
+html[data-theme="dark"] :is(
+  .seller-table td, .seller-table th, .admin-table td, .admin-table th,
+  .account-panel, .product-card, .seller-panel, .admin-panel,
+  .filter-group, .cart-line, .auth-card, .metric-grid article,
+  .admin-metrics article
+) {
+  border-color: #37414e;
+}
+html[data-theme="dark"] :is(.flash-page-hero, .hero-note, .seller-banner, .category-tile) {
+  background-color: #222a34;
+  color: #e2e8f0;
+  border-color: #37414e;
+}
+html[data-theme="dark"] .product-image-link img,
+html[data-theme="dark"] .gallery-main img {
+  mix-blend-mode: normal;
+}
+html[data-theme="dark"] .theme-toggle {
+  color: #f7c45e;
+  border-color: #455160;
+  background: #222a34;
+}
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid #e1e6ec;
+  border-radius: 8px;
+  background: #fff;
+  color: #53647a;
+  cursor: pointer;
+}
+.portal header > button.theme-toggle { margin-left: 0; }
+.header-actions > .theme-toggle {
+  padding: 0 6px;
+  border: 0;
+  background: transparent;
+  font: inherit;
+}
+.header-actions > .theme-toggle .header-icon svg { width: 19px; height: 19px; }
+.load-more-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 210px;
+  min-height: 42px;
+  margin: 24px auto 0;
+  padding: 0 18px;
+  border: 1px solid #dfe5ec;
+  border-radius: 9px;
+  background: #fff;
+  color: #334760;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.load-more-button span { color: #8290a2; font-size: 10px; font-weight: 500; }
+.load-more-button:hover:not(:disabled) { border-color: #ed9b37; color: #ae6910; }
+.load-more-button:disabled { color: #8894a3; background: #f1f3f6; cursor: default; }
+html[data-theme="dark"] .load-more-button { color: #e2e8f0; background: #222a34; border-color: #455160; }
+html[data-theme="dark"] .load-more-button span { color: #a7b2c1; }
+html[data-theme="dark"] .auth-card h2,
+html[data-theme="dark"] .auth-field > span:first-child,
+html[data-theme="dark"] .auth-photo b { color: #e5eaf0; }
+html[data-theme="dark"] .auth-card { background: #222a34; }
+html[data-theme="dark"] .auth-control { background: #171d25; border-color: #455160; }
+html[data-theme="dark"] .auth-control input,
+html[data-theme="dark"] .auth-control select { color: #e5eaf0; }
+html[data-theme="dark"] .auth-mobile-brand { color: #e5eaf0; }
+html[data-theme="dark"] .auth-theme-toggle { background: #222a34; border-color: #455160; }
+html[data-theme="dark"] .auth-switch { background: #171d25; }
+html[data-theme="dark"] .auth-switch button.active { background: #303a46; color: #fff; }
+html[data-theme="dark"] .seller-login,
+html[data-theme="dark"] .admin-login,
+html[data-theme="dark"] .onboarding-page { background-color: #171c23; }
+html[data-theme="dark"] .portal main > header { border-color: #37414e; }
+html[data-theme="dark"] .side .help { background: #1a212a; }
+html[data-theme="dark"] .side nav .side-link.active { background: #3c3020; color: #f4bd4b; }
+html[data-theme="dark"] .side nav .side-link.active svg { color: #f4bd4b; }
+html[data-theme="dark"] .page-shell :is(
+  .product-card, .empty-card, .account-panel, .account-sidebar, .account-main,
+  .filter-panel, .filter-head, .filter-group, .flash-product, .flash-state,
+  .cart-panel, .checkout-card, .payment-card, .order-card, .support-card,
+  .assistant-intro, .assistant-answer, .chat-window, .chat-list, .chat-body,
+  .seller-banner, .category-tile, .category-grid, .hero-note,
+  .seller-panel, .admin-panel, .metric-grid article, .admin-metrics article,
+  .inventory-summary article, .dashboard-grid article, .detail-panel
+) { color: #e2e8f0; background-color: #222a34; border-color: #37414e; }
+html[data-theme="dark"] .page-shell :is(
+  .cart-items, .cart-item, .order-summary, .checkout-main, .checkout-step,
+  .checkout-section-head, .checkout-secure, .checkout-item, .payment-option,
+  .card-form-panel, .card-preview, .card-security, .buyer-tool-card,
+  .buyer-tool-info, .request-list article, .notice-list article, .notice-empty,
+  .account-order-row, .saved-address, .address-empty, .chat-context,
+  .message-history, .chat-no-selection, .assistant-empty, .assistant-examples button,
+  .detail-tabs, .tab-content, .option-block, .review-summary, .product-specifications,
+  .empty-card, .inline-empty, .not-found, .flash-fallback-note
+) { color: #e2e8f0; background-color: #222a34; border-color: #37414e; }
+html[data-theme="dark"] .page-shell :is(
+  .product-card, .product-info, .product-details, .account-panel, .account-main,
+  .filter-panel, .filter-group, .seller-panel, .admin-panel
+) h1,
+html[data-theme="dark"] .page-shell :is(
+  .product-card, .product-info, .product-details, .account-panel, .account-main,
+  .filter-panel, .filter-group, .seller-panel, .admin-panel
+) h2,
+html[data-theme="dark"] .page-shell :is(.product-title, .product-seller, .account-intro, .filter-group label) { color: #dfe7f1; }
+html[data-theme="dark"] .site-header .brand-image { background: transparent; }
+html[data-theme="dark"] .page-shell :is(.cart-product-name, .cart-item-info, .checkout-item, .order-product, .order-info-row, .payment-copy, .buyer-tool-card, .notice-list, .request-list) { color: #dfe7f1; }
+html[data-theme="dark"] .page-shell :is(.payment-option, .delivery-option, .address-option, .card-field-row, .checkout-address, .checkout-main input, .checkout-main select, .card-form-panel input) { color: #e6edf5; background: #171d25; border-color: #455160; }
+html[data-theme="dark"] .page-shell :is(.checkout-step, .payment-check, .buyer-progress-step) { color: #bfc9d6; }
+html[data-theme="dark"] .category-nav a,
+html[data-theme="dark"] .header-link,
+html[data-theme="dark"] .top-strip { color: #b7c2d0; }
+html[data-theme="dark"] .offer-section .section-heading { background: #2a2b2c; border-color: #57452b; }
+html[data-theme="dark"] .offer-flame { color: #ff9652; }
+html[data-theme="dark"] .product-card .product-discount-badge { background: #c73a35; }
+html[data-theme="dark"] .portal main > header label,
+html[data-theme="dark"] .seller-panel input,
+html[data-theme="dark"] .seller-panel select,
+html[data-theme="dark"] .admin-panel input,
+html[data-theme="dark"] .admin-panel select { color: #e6edf5; background: #171d25; border-color: #455160; }
+html[data-theme="dark"] .seller-table td,
+html[data-theme="dark"] .admin-table td { color: #d4dce7; border-color: #37414e; }
+html[data-theme="dark"] .seller-table th,
+html[data-theme="dark"] .admin-table th { color: #aab6c6; background: #1a212a; }
+html[data-theme="dark"] .admin-login > section,
+html[data-theme="dark"] .seller-login > section,
+html[data-theme="dark"] .onboarding-card { color: #e5eaf0; background: #222a34; border-color: #37414e; }
+html[data-theme="dark"] .admin-login h1,
+html[data-theme="dark"] .seller-login h1,
+html[data-theme="dark"] .onboarding-card h1 { color: #e5eaf0; }

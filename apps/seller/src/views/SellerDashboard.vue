@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { sellerData, formatPKR } from "../data";
 import {
   ArrowRight,
@@ -12,6 +12,8 @@ import {
 const lowStock = computed(() =>
   sellerData.products.filter((p) => p.stock < 10),
 );
+const visibleStockAlerts = ref(4);
+const visibleLowStock = computed(() => lowStock.value.slice(0, visibleStockAlerts.value));
 const activeProducts = computed(
   () => sellerData.products.filter((p) => p.status === "Active").length,
 );
@@ -104,7 +106,7 @@ const activeProducts = computed(
           </div>
           <RouterLink to="/inventory">Manage <ArrowRight /></RouterLink>
         </div>
-        <div v-for="product in lowStock" :key="product.id" class="stock-alert">
+        <div v-for="product in visibleLowStock" :key="product.id" class="stock-alert">
           <TriangleAlert /><span
             ><b>{{ product.title }}</b
             ><small>{{
@@ -117,6 +119,7 @@ const activeProducts = computed(
         <div v-if="!lowStock.length" class="small-empty">
           All products have healthy stock.
         </div>
+        <button class="load-more-button" :disabled="visibleStockAlerts >= lowStock.length" @click="visibleStockAlerts = Math.min(visibleStockAlerts + 4, lowStock.length)">{{ visibleStockAlerts < lowStock.length ? `Load more products (${lowStock.length - visibleStockAlerts} left)` : 'All products loaded' }}</button>
       </section>
     </div>
   </section>

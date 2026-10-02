@@ -25,9 +25,12 @@ function price(value: number) {
         ><ImageWithFallback
           :src="product.image"
           :alt="product.name" /></RouterLink
-      ><span v-if="product.badge" class="product-badge">{{
+      ><span v-if="product.badge" class="product-badge" :class="{ 'product-hot-badge': product.badge.includes('Hot selling') }">{{
         product.badge
       }}</span
+      ><span v-if="product.originalPrice" class="product-discount-badge">{{
+        Math.round((1 - product.price / product.originalPrice) * 100)
+      }}% OFF</span
       ><button
         class="favorite-button"
         :class="{ selected: saved }"

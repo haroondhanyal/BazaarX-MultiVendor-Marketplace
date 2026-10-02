@@ -11,6 +11,7 @@ import {
   MapPin,
 } from "lucide-vue-next";
 import { validateEmail, validatePassword } from "@bazaarx/validation";
+import { registerDemoAccount } from "@bazaarx/ui";
 import { useShopStore } from "../stores/shop";
 import SiteHeader from "../components/SiteHeader.vue";
 import SiteFooter from "../components/SiteFooter.vue";
@@ -37,6 +38,13 @@ function submit() {
   }
   if (password.value !== confirm.value) {
     error.value = "Passwords do not match.";
+    return;
+  }
+  if (!registerDemoAccount("buyer", {
+    name: name.value.trim(), email: email.value.trim(), password: password.value,
+    phone: "", city: "", country: "Pakistan",
+  })) {
+    error.value = "An account with this email already exists. Please sign in.";
     return;
   }
   shop.login(name.value.trim(), email.value);

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { sellerData } from "../data";
 import { Boxes, TriangleAlert, ArrowRight } from "lucide-vue-next";
 const inventory = computed(() =>
@@ -9,6 +9,8 @@ const inventory = computed(() =>
       p.stock === 0 ? "Out of stock" : p.stock < 10 ? "Low stock" : "Healthy",
   })),
 );
+const visibleCount = ref(10);
+const visibleInventory = computed(() => inventory.value.slice(0, visibleCount.value));
 </script>
 <template>
   <section class="page-content">
@@ -64,7 +66,7 @@ const inventory = computed(() =>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="product in inventory" :key="product.id">
+            <tr v-for="product in visibleInventory" :key="product.id">
               <td>{{ product.title }}</td>
               <td>{{ product.sku }}</td>
               <td>{{ product.stock }}</td>
@@ -92,6 +94,7 @@ const inventory = computed(() =>
           </tbody>
         </table>
       </div>
+      <button class="load-more-button" :disabled="visibleCount >= inventory.length" @click="visibleCount = Math.min(visibleCount + 10, inventory.length)">{{ visibleCount < inventory.length ? `Load more products (${inventory.length - visibleCount} left)` : 'All products loaded' }}</button>
     </div>
   </section>
 </template>

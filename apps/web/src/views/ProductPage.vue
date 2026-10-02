@@ -24,6 +24,7 @@ import ProductCard from "../components/ProductCard.vue";
 import ImageWithFallback from "../components/ImageWithFallback.vue";
 import StatusView from "../components/StatusView.vue";
 import { intelligenceApi } from "../services/intelligence";
+import { getDemoReviews } from "../data/demoReviews";
 const route = useRoute();
 const router = useRouter();
 const shop = useShopStore();
@@ -36,6 +37,9 @@ const tab = ref("description");
 const added = ref(false);
 const aiReview = ref<{summary:string;positives:string[];complaints:string[];sentiment:string} | null>(null);
 const aiRecommendations = ref<Product[]>([]);
+const visibleCount = ref(4);
+const visibleReviews = ref(3);
+const demoReviews = computed(() => product.value ? getDemoReviews(product.value) : []);
 const similar = computed(() =>
   products
     .filter(
@@ -43,10 +47,12 @@ const similar = computed(() =>
         item.id !== product.value?.id &&
         item.category === product.value?.category,
     )
-    .slice(0, 4),
 );
 const recommended = computed(() => aiRecommendations.value.length ? aiRecommendations.value : similar.value);
+const visibleRecommended = computed(() => recommended.value.slice(0, visibleCount.value));
 async function loadProduct() {
+  visibleCount.value = 4;
+  visibleReviews.value = 3;
   loading.value = true;
   loadError.value = false;
   try {
@@ -315,9 +321,29 @@ function addCart(goToCart = false) {
             <p>{{ aiReview?.summary ?? `${product.reviews.toLocaleString()} shopper ratings. Review summary is available when the smart API is connected.` }}</p>
             <div v-if="aiReview" class="ai-review-points"><b>Common positives</b><span v-for="item in aiReview.positives" :key="item">{{ item }}</span><b>To consider</b><span v-for="item in aiReview.complaints" :key="item">{{ item }}</span><small>Sentiment: {{ aiReview.sentiment }} · Demo review summary</small></div>
             <span class="verified-review"
-              ><ShieldCheck :size="16" /> Reviews are linked to BazaarX
+              ><ShieldCheck :size="16" /> Verified buyer reviews are linked to BazaarX
               orders.</span
             >
+            <section class="demo-review-list" aria-label="Sample shopper reviews">
+              <div class="demo-review-heading">
+                <h3>Customer photos & videos</h3>
+                <span>Demo sample reviews</span>
+              </div>
+              <article v-for="review in demoReviews.slice(0, visibleReviews)" :key="review.id" class="demo-review-card">
+                <img class="demo-review-avatar" :src="review.avatar" :alt="`${review.gender} sample reviewer`" loading="lazy" />
+                <div class="demo-review-content">
+                  <div class="demo-review-meta"><b>{{ review.name }}</b><span>{{ review.date }}</span></div>
+                  <div class="demo-review-stars" :aria-label="`${review.rating} out of 5 stars`"><Star v-for="star in 5" :key="star" :size="13" :fill="star <= review.rating ? 'currentColor' : 'none'" /></div>
+                  <p>{{ review.comment }}</p>
+                  <div v-if="review.image || review.video" class="demo-review-media">
+                    <img v-if="review.image" :src="review.image" :alt="`Sample customer photo of ${product?.name}`" loading="lazy" />
+                    <video v-if="review.video" controls preload="none" :poster="product?.image" aria-label="Sample demo review video"><source :src="review.video" type="video/mp4" />Video playback is not supported in this browser.</video>
+                  </div>
+                  <small class="demo-review-note">Illustrative demo content · not a verified buyer review</small>
+                </div>
+              </article>
+              <button v-if="visibleReviews < demoReviews.length" class="load-more-button" @click="visibleReviews = Math.min(visibleReviews + 3, demoReviews.length)">Load more sample reviews ({{ demoReviews.length - visibleReviews }} left)</button>
+            </section>
           </div>
         </div>
       </section>
@@ -329,8 +355,9 @@ function addCart(goToCart = false) {
           </div>
         </div>
         <div class="product-grid">
-          <ProductCard v-for="item in recommended" :key="item.id" :product="item" />
+          <ProductCard v-for="item in visibleRecommended" :key="item.id" :product="item" />
         </div>
+        <button v-if="visibleCount < recommended.length" class="load-more-button" @click="visibleCount = Math.min(visibleCount + 4, recommended.length)">Load more similar products ({{ recommended.length - visibleCount }} left)</button>
       </section>
     </main>
     <main v-else class="container">

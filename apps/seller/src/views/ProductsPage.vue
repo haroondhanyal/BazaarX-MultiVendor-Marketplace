@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { sellerData, formatPKR } from "../data";
 import { Search, Plus, Package, MoreVertical } from "lucide-vue-next";
 const query = ref("");
 const filter = ref("All");
+const visibleCount = ref(10);
 const rows = computed(() =>
   sellerData.products.filter(
     (p) =>
@@ -11,6 +12,8 @@ const rows = computed(() =>
       p.title.toLowerCase().includes(query.value.toLowerCase()),
   ),
 );
+const visibleRows = computed(() => rows.value.slice(0, visibleCount.value));
+watch([query, filter], () => { visibleCount.value = 10; });
 function removeProduct(id: string) {
   sellerData.products = sellerData.products.filter((p) => p.id !== id);
 }
@@ -54,7 +57,7 @@ function removeProduct(id: string) {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="product in rows" :key="product.id">
+            <tr v-for="product in visibleRows" :key="product.id">
               <td>
                 <span class="table-product"
                   ><span><Package /></span
@@ -96,6 +99,7 @@ function removeProduct(id: string) {
           </tbody>
         </table>
       </div>
+      <button class="load-more-button" :disabled="visibleCount >= rows.length" @click="visibleCount = Math.min(visibleCount + 10, rows.length)">{{ visibleCount < rows.length ? `Load more products (${rows.length - visibleCount} left)` : 'All products loaded' }}</button>
       <div v-if="!rows.length" class="small-empty">
         No matching products. Change the search or add a product.
       </div>

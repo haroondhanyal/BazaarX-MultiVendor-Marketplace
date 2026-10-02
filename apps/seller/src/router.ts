@@ -12,7 +12,7 @@ import SellerToolsPage from "./views/SellerToolsPage.vue";
 import { sellerData } from "./data";
 
 export const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     { path: "/login", component: SellerLogin },
     { path: "/onboarding", component: SellerOnboarding },

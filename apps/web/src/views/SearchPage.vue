@@ -28,6 +28,7 @@ const minimumRating = ref(0);
 const inStockOnly = ref(false);
 const discountOnly = ref(false);
 const filtersOpen = ref(false);
+const visibleCount = ref(24);
 const loading = ref(false);
 const apiError = ref(false);
 const catalog = ref(products);
@@ -64,15 +65,20 @@ watch(
 
 const resultProducts = computed(() => {
   const term = query.value.trim().toLowerCase();
+  const dealSearch = /\b(deal|deals|sale|sales|offer|offers)\b/.test(term);
+  const hotSearch = /\b(hot|selling|trending)\b/.test(term);
   const routeCategory =
     categories.find((category) => category.slug === route.params.slug)?.name ??
     "";
   const filtered = catalog.value.filter((product) => {
     const matchesTerm =
       !term ||
-      `${product.name} ${product.brand} ${product.category} ${product.description}`
+      `${product.name} ${product.brand} ${product.category} ${product.description} ${product.badge ?? ""}`
         .toLowerCase()
         .includes(term);
+    const matchesShoppingShortcut =
+      (dealSearch && Boolean(product.originalPrice)) ||
+      (hotSearch && (product.badge?.toLowerCase().includes("hot selling") ?? false));
     const matchesCategory = !selectedCategory.value
       ? !routeCategory || product.category === routeCategory
       : product.category === selectedCategory.value;
@@ -91,7 +97,7 @@ const resultProducts = computed(() => {
       !discountOnly.value ||
       Boolean(product.originalPrice && product.originalPrice > product.price);
     return (
-      matchesTerm &&
+      (!term || matchesShoppingShortcut || matchesTerm) &&
       matchesCategory &&
       matchesPrice &&
       matchesRating &&
@@ -109,6 +115,13 @@ const resultProducts = computed(() => {
     return 0;
   });
 });
+
+const visibleProducts = computed(() => resultProducts.value.slice(0, visibleCount.value));
+watch(
+  [query, selectedCategory, selectedBrands, selectedSellers, sortBy, minPrice, maxPrice, minimumRating, inStockOnly, discountOnly],
+  () => { visibleCount.value = 24; },
+  { deep: true },
+);
 
 function reset() {
   selectedCategory.value = "";
@@ -316,13 +329,16 @@ function reset() {
           class="product-grid listing-products"
         >
           <ProductCard
-            v-for="product in resultProducts"
+            v-for="product in visibleProducts"
             :key="product.id"
             :product="product"
           />
         </div>
+        <button v-if="visibleCount < resultProducts.length" class="load-more-button" @click="visibleCount = Math.min(visibleCount + 24, resultProducts.length)">
+          Load more products <span>({{ resultProducts.length - visibleCount }} left)</span>
+        </button>
         <StatusView
-          v-else
+          v-else-if="!resultProducts.length"
           mode="empty"
           title="No products found"
           message="Try a different search or clear your filters."

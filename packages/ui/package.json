@@ -4,6 +4,8 @@
   "type": "module",
   "main": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./auth.css": "./src/auth.css",
+    "./theme.css": "./src/theme.css"
   }
 }

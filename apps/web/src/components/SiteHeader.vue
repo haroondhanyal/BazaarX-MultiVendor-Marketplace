@@ -10,16 +10,23 @@ import {
   X,
   Store,
   Sparkles,
+  Moon,
+  Sun,
 } from "lucide-vue-next";
+import { getThemeMode, toggleThemeMode } from "@bazaarx/ui";
 import { useShopStore } from "../stores/shop";
 const shop = useShopStore();
 const router = useRouter();
 const term = ref("");
 const menuOpen = ref(false);
-const sellerPortalUrl = import.meta.env.VITE_SELLER_PORTAL_URL || "http://localhost:5174";
-const adminPortalUrl = import.meta.env.VITE_ADMIN_PORTAL_URL || "http://localhost:5175";
+const darkMode = ref(getThemeMode() === "dark");
+const sellerPortalUrl = "/seller/onboarding";
+const adminPortalUrl = "/admin/";
 function search() {
   router.push({ path: "/search", query: term.value ? { q: term.value } : {} });
+}
+function toggleTheme() {
+  darkMode.value = toggleThemeMode() === "dark";
 }
 </script>
 
@@ -28,7 +35,7 @@ function search() {
     <div class="container top-strip-inner">
       <span>Shop smarter. Live better.</span>
       <div>
-        <a :href="sellerPortalUrl">Sell on BazaarX</a><span class="top-separator">·</span
+        <a :href="sellerPortalUrl">Sell with us</a><span class="top-separator">·</span
         ><a :href="adminPortalUrl">Marketplace admin</a>
       </div>
     </div>
@@ -57,6 +64,7 @@ function search() {
         /><button type="submit">Search</button>
       </form>
       <nav class="header-actions" aria-label="Quick links">
+        <button class="header-link theme-toggle" type="button" :aria-label="darkMode ? 'Switch to light theme' : 'Switch to dark theme'" @click="toggleTheme"><span class="header-icon"><Sun v-if="darkMode" /><Moon v-else /></span><span class="action-label">{{ darkMode ? 'Light' : 'Dark' }}</span></button>
         <RouterLink to="/wishlist" class="header-link"
           ><span class="header-icon"
             ><Heart /><i v-if="shop.wishlist.length" class="count-dot">{{

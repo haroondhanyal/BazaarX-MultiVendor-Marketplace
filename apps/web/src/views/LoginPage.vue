@@ -12,6 +12,7 @@ import {
   Truck,
 } from "lucide-vue-next";
 import { validateEmail, validatePassword } from "@bazaarx/validation";
+import { authenticateDemoAccount, demoAccounts } from "@bazaarx/ui";
 import { useShopStore } from "../stores/shop";
 import SiteHeader from "../components/SiteHeader.vue";
 import SiteFooter from "../components/SiteFooter.vue";
@@ -32,13 +33,12 @@ function submit() {
     error.value = "Password must be at least 8 characters.";
     return;
   }
-  shop.login(
-    email.value
-      .split("@")[0]
-      .replace(/[._-]/g, " ")
-      .replace(/\b\w/g, (c) => c.toUpperCase()),
-    email.value,
-  );
+  const account = authenticateDemoAccount("buyer", email.value, password.value);
+  if (!account) {
+    error.value = "Account not found. Choose a demo account below or create one.";
+    return;
+  }
+  shop.login(account.name, account.email);
   router.push(String(route.query.next || "/account"));
 }
 </script>
@@ -121,9 +121,9 @@ function submit() {
           <RouterLink to="/signup">Create an account</RouterLink>
         </p>
         <p class="mock-note">
-          Demo phase: any valid email and 8-character password will sign you in
-          locally.
+          Buyer accounts are stored in this browser as local demo data.
         </p>
+        <details class="demo-account-list"><summary>Show 5 demo buyer accounts</summary><div v-for="account in demoAccounts.buyer" :key="account.email"><b>{{ account.name }}</b><span>{{ account.email }}</span><code>{{ account.password }}</code></div></details>
       </form>
     </main>
     <SiteFooter />
