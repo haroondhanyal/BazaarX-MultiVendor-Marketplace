@@ -216,6 +216,31 @@ html[data-theme="dark"] .support-intro label {
   background: #171d25;
   border-color: #455160;
 }
+html[data-theme="dark"] .cart-seller-heading {
+  color: #e2e8f0;
+  background: #1b222b;
+  border-color: #37414e;
+}
+html[data-theme="dark"] .seller-secure,
+html[data-theme="dark"] .cart-stock,
+html[data-theme="dark"] .secure-note svg { color: #71d5a5; }
+html[data-theme="dark"] .cart-item { border-color: #37414e; }
+html[data-theme="dark"] .cart-item-image { background: #171d25; }
+html[data-theme="dark"] .cart-item-image img { mix-blend-mode: normal; }
+html[data-theme="dark"] .shipping-progress { color: #7db7ff; }
+html[data-theme="dark"] .shipping-progress b { color: #e2e8f0; }
+html[data-theme="dark"] .shipping-progress small { color: #b7c2d0; }
+html[data-theme="dark"] .progress-track { background: #3b4654; }
+html[data-theme="dark"] .summary-row { color: #c2ccda; }
+html[data-theme="dark"] .summary-row b { color: #e2e8f0; }
+html[data-theme="dark"] .secure-note,
+html[data-theme="dark"] .continue-shopping { color: #c2ccda; }
+html[data-theme="dark"] .cart-mobile-bottom .quantity-control button,
+html[data-theme="dark"] .remove-button {
+  color: #e2e8f0;
+  background: #171d25;
+  border: 1px solid #455160;
+}
 html[data-theme="dark"] .page-shell :is(.cart-product-name, .cart-item-info, .checkout-item, .order-product, .order-info-row, .payment-copy, .buyer-tool-card, .notice-list, .request-list) { color: #dfe7f1; }
 html[data-theme="dark"] .page-shell :is(.payment-option, .delivery-option, .address-option, .card-field-row, .checkout-address, .checkout-main input, .checkout-main select, .card-form-panel input) { color: #e6edf5; background: #171d25; border-color: #455160; }
 html[data-theme="dark"] .page-shell :is(.checkout-step, .payment-check, .buyer-progress-step) { color: #bfc9d6; }
