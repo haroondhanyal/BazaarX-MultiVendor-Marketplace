@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="apps/web/public/assets/branding/bazaarx-logo.svg" alt="BazaarX — Shop smarter. Live better." width="420" />
+  <img src="apps/web/public/assets/branding/bazaarx-logo.png" alt="BazaarX logo" width="520" />
 </p>
 
 <p align="center"><strong>Shop smarter. Live better.</strong><br />A multi-vendor marketplace for shoppers, independent sellers, and marketplace teams.</p>
