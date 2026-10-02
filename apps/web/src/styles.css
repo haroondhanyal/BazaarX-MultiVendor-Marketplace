@@ -800,8 +800,8 @@ img {
   color: var(--orange);
 }
 .brand-image {
-  width: 155px;
-  height: 38px;
+  width: 58px;
+  height: 58px;
   object-fit: contain;
   object-position: left center;
 }
@@ -1498,8 +1498,8 @@ img {
   font-size: 19px;
 }
 .footer-brand .brand-image {
-  width: 142px;
-  height: 34px;
+  width: 76px;
+  height: 76px;
 }
 .footer-grid p {
   font-size: 11px;

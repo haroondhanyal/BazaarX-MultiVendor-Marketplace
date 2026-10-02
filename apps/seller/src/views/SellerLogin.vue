@@ -20,7 +20,7 @@ function submit() {
 <template>
   <main class="seller-login">
     <RouterLink to="/" class="login-logo"
-      ><img src="/assets/branding/bazaarx-logo.svg" alt="BazaarX"
+      ><img src="/assets/branding/bazaarx-logo.png" alt="BazaarX"
     /></RouterLink>
     <section>
       <span class="eyebrow">SELLER CENTER</span>

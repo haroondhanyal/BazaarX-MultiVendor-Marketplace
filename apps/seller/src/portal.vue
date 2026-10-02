@@ -45,7 +45,7 @@ function logout() {
     <aside class="side" :class="{ 'side-open': menuOpen }">
       <RouterLink class="brand" to="/"
         ><img
-          src="/assets/branding/bazaarx-logo.svg"
+          src="/assets/branding/bazaarx-logo.png"
           alt="BazaarX" /></RouterLink
       ><small>SELLER CENTER</small>
       <nav>

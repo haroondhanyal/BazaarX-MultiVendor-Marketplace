@@ -73,7 +73,7 @@ function finish() {
 <template>
   <main class="onboarding-page">
     <RouterLink to="/" class="login-logo"
-      ><img src="/assets/branding/bazaarx-logo.svg" alt="BazaarX" /></RouterLink
+      ><img src="/assets/branding/bazaarx-logo.png" alt="BazaarX" /></RouterLink
     ><RouterLink v-if="step === 0" to="/login" class="onboarding-back"
       ><ArrowLeft /> Back to sign in</RouterLink
     >

@@ -19,7 +19,7 @@ function submit() {
 <template>
   <main class="admin-login">
     <RouterLink class="admin-login-brand" to="/"
-      ><img src="/assets/branding/bazaarx-logo.svg" alt="BazaarX"
+      ><img src="/assets/branding/bazaarx-logo.png" alt="BazaarX"
     /></RouterLink>
     <section>
       <span class="eyebrow">ADMIN PORTAL</span>

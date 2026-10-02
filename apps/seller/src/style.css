@@ -348,8 +348,8 @@ main section > p {
 }
 .brand img {
   display: block;
-  width: 148px;
-  height: 35px;
+  width: 66px;
+  height: 66px;
   object-fit: contain;
   object-position: left center;
 }
@@ -942,8 +942,8 @@ main section > p {
   left: 30px;
 }
 .login-logo img {
-  width: 155px;
-  height: 38px;
+  width: 100px;
+  height: 100px;
 }
 .seller-login > section {
   width: min(420px, 100%);
@@ -1159,8 +1159,8 @@ main section > p {
 }
 @media (max-width: 650px) {
   .brand img {
-    width: 133px;
-    height: 32px;
+    width: 56px;
+    height: 56px;
   }
   .portal-content {
     padding: 18px 12px;
@@ -1222,6 +1222,7 @@ main section > p {
     left: 20px;
   }
   .login-logo img {
-    width: 135px;
+    width: 76px;
+    height: 76px;
   }
 }

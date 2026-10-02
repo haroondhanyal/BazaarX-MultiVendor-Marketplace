@@ -5,7 +5,7 @@
         <RouterLink to="/" class="brand footer-brand">
           <img
             class="brand-image"
-            src="/assets/branding/bazaarx-logo.svg"
+            src="/assets/branding/bazaarx-logo.png"
             alt="BazaarX"
           />
         </RouterLink>
