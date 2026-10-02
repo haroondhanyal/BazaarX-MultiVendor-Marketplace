@@ -24,11 +24,11 @@ The screenshots below show the buyer storefront and the seller/admin dashboards 
 
 ![BazaarX admin dashboard](docs/screenshots/admin.png)
 
-Portal screenshots were captured at a 1440 px desktop viewport. Buyer, Seller, and Admin were also opened at 768 px tablet and 390 px mobile widths; all three had no horizontal page overflow and no frontend runtime errors during the check.
+Portal screenshots were captured at a 1440 px desktop viewport. Buyer, Seller, and Admin were also opened at 768 px tablet and 390 px mobile widths; all three had no horizontal page overflow and no frontend runtime errors during the check. Buyer footer destinations (search, wishlist, cart, order history, customer care, and contact) were checked at 320, 390, 768, and 1440 px; each rendered without horizontal overflow.
 
 ## Product areas
 
-- **Buyer marketplace** — 500 image-backed products in eight categories, hot-selling and discounted offers, search, product details, wishlist, cart, sign-in/sign-up, checkout, demo payment, orders/tracking, returns/refunds, notifications, support, and buyer–seller chat. Product and recommendation lists have load-more controls.
+- **Buyer marketplace** — 500 image-backed products in eight categories, hot-selling and discounted offers, search, product details, wishlist, cart, sign-in/sign-up, checkout, demo payment, orders/tracking, returns/refunds, notifications, support/contact, and buyer–seller chat. Product and recommendation lists have load-more controls.
 - **Seller center** — demo sign-in and onboarding, dashboard, product list, create/edit product, stock management, order list and fulfilment, returns, promotions, finance, payouts, analytics, store/account settings, and buyer messages.
 - **Admin portal** — demo sign-in and dashboard, user and seller management, seller approval, product moderation, orders, payments, shipments, returns/refunds, promotions, vouchers, flash sales, campaigns, fraud/risk, support tickets, analytics, audit logs, and system settings.
 - **API foundation** — NestJS health, catalog, mock authentication, checkout, payment, and inventory endpoints, with request validation and Swagger documentation.

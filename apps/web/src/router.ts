@@ -18,6 +18,7 @@ import TrackingPage from "./views/TrackingPage.vue";
 import ReturnsPage from "./views/ReturnsPage.vue";
 import NotificationsPage from "./views/NotificationsPage.vue";
 import SupportPage from "./views/SupportPage.vue";
+import ContactPage from "./views/ContactPage.vue";
 import ChatPage from "./views/ChatPage.vue";
 import FlashSalesPage from "./views/FlashSalesPage.vue";
 import AssistantPage from "./views/AssistantPage.vue";
@@ -86,6 +87,7 @@ export const router = createRouter({
     { path: "/returns", component: ReturnsPage, meta: { title: "Returns and refunds", requiresAuth: true } },
     { path: "/notifications", component: NotificationsPage, meta: { title: "Notifications", requiresAuth: true } },
     { path: "/support", component: SupportPage, meta: { title: "Support center" } },
+    { path: "/contact", component: ContactPage, meta: { title: "Contact BazaarX" } },
     { path: "/chat/:seller?", component: ChatPage, meta: { title: "Buyer seller chat", requiresAuth: true } },
     {
       path: "/seller/:pathMatch(.*)*",

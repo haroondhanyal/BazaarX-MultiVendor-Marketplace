@@ -18,8 +18,8 @@
       </div>
       <div>
         <b>Help & support</b><a href="/account/orders">Track an order</a
-        ><a href="/account">Customer care</a
-        ><a href="mailto:help@bazaarx.example">Contact us</a>
+        ><a href="/support">Customer care</a
+        ><a href="/contact">Contact us</a>
       </div>
       <div>
         <b>Sell with us</b><a href="/seller/">Seller Center</a
