@@ -4,6 +4,8 @@ html[data-theme="dark"] {
   --muted: #a7b2c1;
   --line: #37414e;
   --soft: #202730;
+  --surface: #222a34;
+  --surface-soft: #1b222b;
   --shadow: 0 8px 30px #0005;
   color: #e5eaf0;
   background: #171c23;
@@ -181,6 +183,39 @@ html[data-theme="dark"] .page-shell :is(
 ) h2,
 html[data-theme="dark"] .page-shell :is(.product-title, .product-seller, .account-intro, .filter-group label) { color: #dfe7f1; }
 html[data-theme="dark"] .site-header .brand-image { background: transparent; }
+html[data-theme="dark"] .search-box {
+  color: #b7c2d0;
+  background: #171d25;
+  border-color: #455160;
+}
+html[data-theme="dark"] .search-box button {
+  color: #fff;
+  background: #f4511e;
+}
+html[data-theme="dark"] .button-outline {
+  color: #e2e8f0;
+  background: #222a34;
+  border-color: #455160;
+}
+html[data-theme="dark"] .site-footer a { color: #c2ccda; }
+html[data-theme="dark"] .site-footer a:hover { color: #fff; }
+html[data-theme="dark"] .catalog-note {
+  color: #c2ccda;
+  background: #222a34;
+  border-color: #37414e;
+}
+html[data-theme="dark"] .contact-info,
+html[data-theme="dark"] .contact-form {
+  color: #e2e8f0;
+  background: #222a34;
+  border-color: #37414e;
+}
+html[data-theme="dark"] .support-panel summary { color: #e2e8f0; }
+html[data-theme="dark"] .support-intro label {
+  color: #b7c2d0;
+  background: #171d25;
+  border-color: #455160;
+}
 html[data-theme="dark"] .page-shell :is(.cart-product-name, .cart-item-info, .checkout-item, .order-product, .order-info-row, .payment-copy, .buyer-tool-card, .notice-list, .request-list) { color: #dfe7f1; }
 html[data-theme="dark"] .page-shell :is(.payment-option, .delivery-option, .address-option, .card-field-row, .checkout-address, .checkout-main input, .checkout-main select, .card-form-panel input) { color: #e6edf5; background: #171d25; border-color: #455160; }
 html[data-theme="dark"] .page-shell :is(.checkout-step, .payment-check, .buyer-progress-step) { color: #bfc9d6; }
