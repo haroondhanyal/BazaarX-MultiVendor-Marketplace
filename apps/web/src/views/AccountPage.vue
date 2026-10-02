@@ -15,6 +15,8 @@ import {
   Plus,
   Trash2,
   Check,
+  LifeBuoy,
+  MessageCircle,
 } from "lucide-vue-next";
 import { validatePassword } from "@bazaarx/validation";
 import { useShopStore } from "../stores/shop";
@@ -101,6 +103,18 @@ function signOut() {
           <RouterLink class="account-nav" to="/wishlist"
             ><Heart /> Wishlist</RouterLink
           >
+          <RouterLink class="account-nav" to="/notifications"
+            ><Bell /> Notifications</RouterLink
+          >
+          <RouterLink class="account-nav" to="/returns"
+            ><Package /> Returns & refunds</RouterLink
+          >
+          <RouterLink class="account-nav" to="/chat"
+            ><MessageCircle /> Messages</RouterLink
+          >
+          <RouterLink class="account-nav" to="/support"
+            ><LifeBuoy /> Support center</RouterLink
+          >
           <RouterLink
             class="account-nav"
             :class="{ active: section === 'addresses' }"
@@ -141,7 +155,7 @@ function signOut() {
               }}
             </p>
             <div v-if="section === 'overview'" class="account-stat-row">
-              <div><Package /><b>0</b><span>Orders</span></div>
+              <div><Package /><b>{{ shop.orders.length }}</b><span>Orders</span></div>
               <div>
                 <Heart /><b>{{ shop.wishlist.length }}</b
                 ><span>Saved finds</span>

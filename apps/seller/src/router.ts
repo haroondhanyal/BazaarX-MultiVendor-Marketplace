@@ -8,6 +8,7 @@ import InventoryPage from "./views/InventoryPage.vue";
 import OrdersPage from "./views/OrdersPage.vue";
 import SellerOrderPage from "./views/SellerOrderPage.vue";
 import SellerOnboarding from "./views/SellerOnboarding.vue";
+import SellerToolsPage from "./views/SellerToolsPage.vue";
 import { sellerData } from "./data";
 
 export const router = createRouter({
@@ -26,11 +27,14 @@ export const router = createRouter({
         { path: "inventory", component: InventoryPage },
         { path: "orders", component: OrdersPage },
         { path: "orders/:id", component: SellerOrderPage },
-        { path: "finance", component: SellerDashboard },
-        { path: "marketing", component: SellerDashboard },
-        { path: "analytics", component: SellerDashboard },
-        { path: "store", component: SellerDashboard },
-        { path: "settings", component: SellerDashboard },
+        { path: "returns", component: SellerToolsPage, meta: { tool: "returns" } },
+        { path: "promotions", component: SellerToolsPage, meta: { tool: "promotions" } },
+        { path: "finance", component: SellerToolsPage, meta: { tool: "finance" } },
+        { path: "payouts", component: SellerToolsPage, meta: { tool: "payouts" } },
+        { path: "analytics", component: SellerToolsPage, meta: { tool: "analytics" } },
+        { path: "store", component: SellerToolsPage, meta: { tool: "store" } },
+        { path: "settings", component: SellerToolsPage, meta: { tool: "settings" } },
+        { path: "messages", component: SellerToolsPage, meta: { tool: "messages" } },
       ],
     },
   ],

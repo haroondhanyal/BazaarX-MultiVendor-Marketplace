@@ -14,6 +14,11 @@ import PaymentMethodPage from "./views/PaymentMethodPage.vue";
 import CardPaymentPage from "./views/CardPaymentPage.vue";
 import PaymentSuccessPage from "./views/PaymentSuccessPage.vue";
 import OrderPage from "./views/OrderPage.vue";
+import TrackingPage from "./views/TrackingPage.vue";
+import ReturnsPage from "./views/ReturnsPage.vue";
+import NotificationsPage from "./views/NotificationsPage.vue";
+import SupportPage from "./views/SupportPage.vue";
+import ChatPage from "./views/ChatPage.vue";
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -73,6 +78,11 @@ export const router = createRouter({
       component: OrderPage,
       meta: { title: "Order details", requiresAuth: true },
     },
+    { path: "/orders/:orderId/tracking", component: TrackingPage, meta: { title: "Track order", requiresAuth: true } },
+    { path: "/returns", component: ReturnsPage, meta: { title: "Returns and refunds", requiresAuth: true } },
+    { path: "/notifications", component: NotificationsPage, meta: { title: "Notifications", requiresAuth: true } },
+    { path: "/support", component: SupportPage, meta: { title: "Support center" } },
+    { path: "/chat/:seller?", component: ChatPage, meta: { title: "Buyer seller chat", requiresAuth: true } },
     {
       path: "/seller/:pathMatch(.*)*",
       component: PortalShell,

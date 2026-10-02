@@ -15,7 +15,9 @@ Agree on shared types and endpoint shapes before parallel work touches the same 
 
 ## Current mock boundary
 
-The buyer cart, wishlist, customer session, and saved addresses use browser local storage. The catalog uses `apps/web/src/services/catalog.ts`: it reads the local seed list by default and can call `/api/v1/catalog` when `VITE_API_URL` is set. The Nest API currently exposes health, mock auth, and a small mock catalog. Authentication is for UI demonstration only; it does not create real credentials or tokens.
+The buyer cart, wishlist, customer session, saved addresses, order history, support tickets, returns, notifications, and chat use browser local storage for this phase. The catalog uses `apps/web/src/services/catalog.ts`: it reads the local seed list by default and can call `/api/v1/catalog` when `VITE_API_URL` is set. Checkout and mock payment can also use the API when `VITE_API_URL` is set. The Nest API currently exposes health, mock auth, catalog, checkout, payments, and inventory; API orders and payment records live in memory. Seller and admin operational surfaces currently use browser mock data. Authentication is for UI demonstration only; it does not create real credentials or tokens.
+
+Each role has its own route table and page folder. The seller workspace page (`apps/seller/src/views/SellerToolsPage.vue`) and admin workspace page (`apps/admin/src/views/AdminToolsPage.vue`) render the separate finance, marketing, risk, operations, reporting, and settings routes from typed per-screen data. Actions update local demo state; report actions download CSV files. Buyer support and after-sales screens each have their own view under `apps/web/src/views`.
 
 ## Local commands
 

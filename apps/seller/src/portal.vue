@@ -13,6 +13,13 @@ import {
   CircleHelp,
   LogOut,
   Store,
+  RotateCcw,
+  Tags,
+  CreditCard,
+  ChartNoAxesCombined,
+  Settings,
+  MessageCircle,
+  Wallet,
 } from "lucide-vue-next";
 import { sellerData } from "./data";
 const route = useRoute();
@@ -23,7 +30,15 @@ const links = [
   { name: "Store onboarding", path: "/onboarding", icon: Store },
   { name: "Products", path: "/products", icon: Package },
   { name: "Orders", path: "/orders", icon: ShoppingBag },
+  { name: "Returns", path: "/returns", icon: RotateCcw },
   { name: "Inventory", path: "/inventory", icon: Boxes },
+  { name: "Promotions", path: "/promotions", icon: Tags },
+  { name: "Finance", path: "/finance", icon: CreditCard },
+  { name: "Payouts", path: "/payouts", icon: Wallet },
+  { name: "Analytics", path: "/analytics", icon: ChartNoAxesCombined },
+  { name: "Messages", path: "/messages", icon: MessageCircle },
+  { name: "Store settings", path: "/store", icon: Store },
+  { name: "Account settings", path: "/settings", icon: Settings },
 ];
 const title = computed(() =>
   route.path === "/"

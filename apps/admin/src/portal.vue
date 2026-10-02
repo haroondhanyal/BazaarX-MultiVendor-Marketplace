@@ -14,6 +14,16 @@ import {
   ChevronRight,
   LifeBuoy,
   LogOut,
+  Truck,
+  RotateCcw,
+  Tags,
+  TicketPercent,
+  Zap,
+  Megaphone,
+  ShieldAlert,
+  ChartNoAxesCombined,
+  ClipboardList,
+  Settings,
 } from "lucide-vue-next";
 import { adminData } from "./data";
 const route = useRoute();
@@ -21,12 +31,22 @@ const router = useRouter();
 const menuOpen = ref(false);
 const links = [
   { name: "Dashboard", path: "/", icon: LayoutDashboard },
-  { name: "Users", path: "/users", icon: Users, disabled: true },
+  { name: "Users", path: "/users", icon: Users },
   { name: "Sellers", path: "/sellers", icon: Store },
   { name: "Product moderation", path: "/moderation", icon: Package },
   { name: "Orders", path: "/orders", icon: ShoppingBag },
   { name: "Payments", path: "/payments", icon: CreditCard },
-  { name: "Support", path: "/support", icon: LifeBuoy, disabled: true },
+  { name: "Shipments", path: "/shipments", icon: Truck },
+  { name: "Returns & refunds", path: "/returns", icon: RotateCcw },
+  { name: "Promotions", path: "/promotions", icon: Tags },
+  { name: "Vouchers", path: "/vouchers", icon: TicketPercent },
+  { name: "Flash sales", path: "/flash-sales", icon: Zap },
+  { name: "Campaigns", path: "/campaigns", icon: Megaphone },
+  { name: "Fraud & risk", path: "/fraud", icon: ShieldAlert },
+  { name: "Support tickets", path: "/support", icon: LifeBuoy },
+  { name: "Analytics", path: "/analytics", icon: ChartNoAxesCombined },
+  { name: "Audit logs", path: "/audit-logs", icon: ClipboardList },
+  { name: "System settings", path: "/settings", icon: Settings },
 ];
 const title = computed(
   () =>
@@ -47,19 +67,12 @@ function logout() {
       ><small>ADMIN PORTAL</small>
       <nav>
         <RouterLink
-          v-for="item in links.filter((link) => !link.disabled)"
+          v-for="item in links"
           :key="item.path"
           :to="item.path"
           class="side-link"
           :class="{ active: route.path === item.path }"
           ><component :is="item.icon" />{{ item.name }}</RouterLink
-        ><span
-          v-for="item in links.filter((link) => link.disabled)"
-          :key="item.name"
-          class="side-link disabled-link"
-          :aria-label="`${item.name}, planned for a later phase`"
-          ><component :is="item.icon" />{{ item.name
-          }}<small>Later</small></span
         >
       </nav>
       <div class="help">

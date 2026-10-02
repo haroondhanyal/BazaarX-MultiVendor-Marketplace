@@ -376,6 +376,7 @@ main section > p {
   color: #e64c1d;
   font-weight: 700;
 }
+.side nav { overflow-y: auto; max-height: calc(100vh - 245px); padding-right: 2px; }
 .side-open {
   display: flex !important;
   position: fixed;

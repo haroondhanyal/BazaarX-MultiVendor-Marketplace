@@ -8,6 +8,8 @@ import {
   Truck,
   MapPin,
   CreditCard,
+  MessageCircle,
+  RotateCcw,
 } from "lucide-vue-next";
 import { useShopStore } from "../stores/shop";
 import SiteHeader from "../components/SiteHeader.vue";
@@ -118,6 +120,11 @@ const activeStep = computed(() =>
               <MapPin /><span
                 ><b>Delivery address</b><small>{{ order.address }}</small></span
               >
+            </div>
+            <div class="order-action-links">
+              <RouterLink :to="`/orders/${order.id}/tracking`"><Truck /> Track delivery</RouterLink>
+              <RouterLink to="/returns"><RotateCcw /> Request return or refund</RouterLink>
+              <RouterLink :to="`/chat/${encodeURIComponent(order.items[0]?.seller ?? 'TechStore Official')}`"><MessageCircle /> Message seller</RouterLink>
             </div>
             <div class="order-info-row">
               <CreditCard /><span
